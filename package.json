@@ -1,0 +1,98 @@
+{
+  "name": "@bereasoftware/nexa",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/nexa.cjs.js",
+  "module": "./dist/nexa.es.js",
+  "types": "./dist/types/index.d.ts",
+  "unpkg": "./dist/nexa.umd.js",
+  "browser": {
+    "./dist/nexa.umd.js": "./dist/nexa.umd.js",
+    "./dist/nexa.iife.js": "./dist/nexa.iife.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/nexa.es.js",
+      "require": "./dist/nexa.cjs.js",
+      "default": "./dist/nexa.umd.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "keywords": [
+    "http",
+    "client",
+    "typescript",
+    "fetch",
+    "api",
+    "request",
+    "library",
+    "retry",
+    "interceptor",
+    "cache",
+    "result-type",
+    "error-handling",
+    "validator",
+    "transformer",
+    "esm",
+    "commonjs",
+    "type-safe"
+  ],
+  "author": "John Andrade <johnandrade@bereasoft.com>",
+  "license": "MIT",
+  "description": "Nexa is a TypeScript HTTP client library that combines the power of fetch with the convenience of axios, while adhering to SOLID principles. It provides a flexible and extensible API for making HTTP requests, handling retries, caching, and more.",
+  "maintainers": [
+    {
+      "name": "John Andrade",
+      "email": "johnandrade@bereasoft.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Berea-Soft/nexa.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Berea-Soft/nexa/issues"
+  },
+  "engines": {
+    "node": ">=20.18.0",
+    "npm": ">=10.8.2"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "not dead",
+    "not IE 11",
+    "> 1%"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "^7.58.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.6",
+    "@semantic-release/npm": "^13.1.5",
+    "@types/node": "^25.5.0",
+    "@vitest/coverage-v8": "^4.1.2",
+    "@vitest/ui": "^4.1.2",
+    "semantic-release": "^25.0.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.3",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.1.2"
+  }
+}
