@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/Berea-Soft/nexa/compare/v1.0.4...v1.0.5) (2026-04-02)
+
+
+### Bug Fixes
+
+* use OIDC for npm publishing ([83d9d8f](https://github.com/Berea-Soft/nexa/commit/83d9d8fc1b8c6afafa4c7438ef71c50e3aa916ad))
+
 ## [1.0.4](https://github.com/Berea-Soft/nexa/compare/v1.0.3...v1.0.4) (2026-04-02)
 
 
