@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/Berea-Soft/nexa/compare/v1.0.5...v1.1.0) (2026-04-19)
+
+
+### Features
+
+* **tests:** enhance HTTP client tests with error context and retry logic ([c619308](https://github.com/Berea-Soft/nexa/commit/c619308dd78aa8399b1380e546a8340689f43006))
+* update package.json with additional metadata and improve Vite config for external dependencies ([2b9c8a3](https://github.com/Berea-Soft/nexa/commit/2b9c8a3e0c68a4cdf72d4018f660c3f2453a85cd))
+
 ## [1.0.5](https://github.com/Berea-Soft/nexa/compare/v1.0.4...v1.0.5) (2026-04-02)
 
 
