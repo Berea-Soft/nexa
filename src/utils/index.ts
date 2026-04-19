@@ -468,6 +468,180 @@ export function createDedupeMiddleware(options: { deduplicator?: RequestDeduplic
  */
 export const dedupeMiddleware: Middleware<HttpContext> = createDedupeMiddleware();
 
+/**
+ * Rate limiting middleware factory - limits requests per time window
+ */
+export function createRateLimitMiddleware(options: {
+  /** Maximum number of requests per window */
+  maxRequests: number;
+  /** Time window in milliseconds (default: 60000 = 1 minute) */
+  windowMs?: number;
+  /** Function to generate rate limit key (default: uses request URL) */
+  keyGenerator?: (ctx: HttpContext) => string;
+  /** Custom error response when limit is exceeded (default: 429 Too Many Requests) */
+  errorResponse?: { status: number; body: unknown };
+} = { maxRequests: 100, windowMs: 60000 }): Middleware<HttpContext> {
+  const windowMs = options.windowMs ?? 60000;
+  const maxRequests = options.maxRequests;
+  const keyGenerator = options.keyGenerator ?? ((ctx) => `${ctx.request.method}:${ctx.request.url}`);
+  
+  // Store request counts per key
+  const requestCounts = new Map<string, { count: number; resetTime: number }>();
+  
+  return async (ctx, next) => {
+    const key = keyGenerator(ctx);
+    const now = Date.now();
+    
+    // Clean up old entries
+    if (requestCounts.size > 1000) {
+      for (const [k, entry] of requestCounts.entries()) {
+        if (now > entry.resetTime) {
+          requestCounts.delete(k);
+        }
+      }
+    }
+    
+    // Get or create entry
+    let entry = requestCounts.get(key);
+    if (!entry || now > entry.resetTime) {
+      entry = { count: 0, resetTime: now + windowMs };
+      requestCounts.set(key, entry);
+    }
+    
+    // Check limit
+    if (entry.count >= maxRequests) {
+      ctx.response = {
+        status: options.errorResponse?.status ?? 429,
+        headers: { 'Content-Type': 'application/json' },
+        body: options.errorResponse?.body ?? { error: 'Too Many Requests', message: 'Rate limit exceeded' },
+      };
+      ctx.state.rateLimited = true;
+      return; // Stop middleware chain
+    }
+    
+    // Increment count and continue
+    entry.count++;
+    ctx.state.rateLimit = {
+      limit: maxRequests,
+      remaining: maxRequests - entry.count,
+      reset: entry.resetTime,
+    };
+    
+    await next();
+  };
+}
+
+/**
+ * Pre-configured rate limit middleware: 100 requests per minute per endpoint
+ */
+export const rateLimitMiddleware: Middleware<HttpContext> = createRateLimitMiddleware();
+
+/**
+ * Circuit breaker middleware factory - prevents cascading failures
+ */
+export function createCircuitBreakerMiddleware(options: {
+  /** Failure threshold to open circuit (default: 5) */
+  failureThreshold?: number;
+  /** Time in ms to wait before attempting again (default: 30000) */
+  resetTimeout?: number;
+  /** Function to determine if a response is a failure (default: status >= 500) */
+  isFailure?: (ctx: HttpContext) => boolean;
+  /** Function to generate circuit key (default: uses request URL) */
+  keyGenerator?: (ctx: HttpContext) => string;
+} = {}): Middleware<HttpContext> {
+  const failureThreshold = options.failureThreshold ?? 5;
+  const resetTimeout = options.resetTimeout ?? 30000;
+  const isFailure = options.isFailure ?? ((ctx) => ctx.response.status >= 500);
+  const keyGenerator = options.keyGenerator ?? ((ctx) => `${ctx.request.method}:${ctx.request.url}`);
+  
+  // Circuit states: 'closed', 'open', 'half-open'
+  const circuits = new Map<string, {
+    state: 'closed' | 'open' | 'half-open';
+    failures: number;
+    lastFailure: number;
+    successCount: number;
+  }>();
+  
+  return async (ctx, next) => {
+    const key = keyGenerator(ctx);
+    let circuit = circuits.get(key);
+    
+    if (!circuit) {
+      circuit = {
+        state: 'closed',
+        failures: 0,
+        lastFailure: 0,
+        successCount: 0,
+      };
+      circuits.set(key, circuit);
+    }
+    
+    // Check if circuit is open
+    if (circuit.state === 'open') {
+      const timeSinceFailure = Date.now() - circuit.lastFailure;
+      if (timeSinceFailure > resetTimeout) {
+        // Move to half-open state
+        circuit.state = 'half-open';
+        circuit.successCount = 0;
+      } else {
+        // Circuit is still open - fail fast
+        ctx.response = {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+          body: { error: 'Service Unavailable', message: 'Circuit breaker is open' },
+        };
+        ctx.state.circuitOpen = true;
+        return;
+      }
+    }
+    
+    try {
+      await next();
+      
+      // Check if response is a failure
+      if (isFailure(ctx)) {
+        circuit.failures++;
+        circuit.lastFailure = Date.now();
+        
+        if (circuit.failures >= failureThreshold) {
+          circuit.state = 'open';
+        } else if (circuit.state === 'half-open') {
+          // Half-open circuit failed, reopen
+          circuit.state = 'open';
+        }
+      } else {
+        // Request succeeded
+        circuit.failures = 0;
+        if (circuit.state === 'half-open') {
+          circuit.successCount++;
+          if (circuit.successCount >= 3) {
+            // Enough successes, close the circuit
+            circuit.state = 'closed';
+            circuit.successCount = 0;
+          }
+        }
+      }
+    } catch (error) {
+      // Request error (network, timeout, etc.)
+      circuit.failures++;
+      circuit.lastFailure = Date.now();
+      
+      if (circuit.failures >= failureThreshold) {
+        circuit.state = 'open';
+      } else if (circuit.state === 'half-open') {
+        circuit.state = 'open';
+      }
+      
+      throw error; // Re-throw for other middleware to handle
+    }
+  };
+}
+
+/**
+ * Pre-configured circuit breaker middleware
+ */
+export const circuitBreakerMiddleware: Middleware<HttpContext> = createCircuitBreakerMiddleware();
+
 // ===== 3. Middleware Pipeline =====
 
 /**
@@ -1148,6 +1322,68 @@ export class DedupePlugin implements Plugin {
 
   setup(manager: PluginManager): void {
     manager.addMiddleware(createDedupeMiddleware());
+  }
+}
+
+/**
+ * Rate limiting plugin - adds rate limiting middleware
+ */
+export class RateLimitPlugin implements Plugin {
+  name = 'rate-limit';
+  private options: {
+    maxRequests?: number;
+    windowMs?: number;
+    keyGenerator?: (ctx: HttpContext) => string;
+    errorResponse?: { status: number; body: unknown };
+  };
+  
+  constructor(options: {
+    maxRequests?: number;
+    windowMs?: number;
+    keyGenerator?: (ctx: HttpContext) => string;
+    errorResponse?: { status: number; body: unknown };
+  } = {}) {
+    this.options = options;
+  }
+  
+  setup(manager: PluginManager): void {
+    manager.addMiddleware(createRateLimitMiddleware({
+      maxRequests: this.options.maxRequests ?? 100,
+      windowMs: this.options.windowMs ?? 60000,
+      keyGenerator: this.options.keyGenerator,
+      errorResponse: this.options.errorResponse,
+    }));
+  }
+}
+
+/**
+ * Circuit breaker plugin - adds circuit breaker middleware
+ */
+export class CircuitBreakerPlugin implements Plugin {
+  name = 'circuit-breaker';
+  private options: {
+    failureThreshold?: number;
+    resetTimeout?: number;
+    isFailure?: (ctx: HttpContext) => boolean;
+    keyGenerator?: (ctx: HttpContext) => string;
+  };
+  
+  constructor(options: {
+    failureThreshold?: number;
+    resetTimeout?: number;
+    isFailure?: (ctx: HttpContext) => boolean;
+    keyGenerator?: (ctx: HttpContext) => string;
+  } = {}) {
+    this.options = options;
+  }
+  
+  setup(manager: PluginManager): void {
+    manager.addMiddleware(createCircuitBreakerMiddleware({
+      failureThreshold: this.options.failureThreshold ?? 5,
+      resetTimeout: this.options.resetTimeout ?? 30000,
+      isFailure: this.options.isFailure,
+      keyGenerator: this.options.keyGenerator,
+    }));
   }
 }
 

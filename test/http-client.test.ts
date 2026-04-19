@@ -23,6 +23,90 @@ describe('HTTP Client Plugin', () => {
     vi.clearAllMocks();
   });
 
+  describe('Error Context (request, response, config)', () => {
+    it('should include request and config in normalized errors', async () => {
+      // Given: fetch throws network error
+      const netErr = new TypeError('Failed to fetch');
+      fetchMock.mockRejectedValueOnce(netErr);
+
+      // When: making request with custom config
+      const config = { url: '/test', headers: { 'X-Custom': 'value' } };
+      const result = await client.get('/test', config);
+
+      // Then: error should contain request and config
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.request).toBeDefined();
+        expect(result.error.request?.url).toBe('https://api.example.com/test');
+        expect(result.error.config).toBeDefined();
+        expect(result.error.config?.url).toBe('/test');
+        expect(result.error.config?.headers).toEqual({ 'X-Custom': 'value' });
+      }
+    });
+
+    it('should include request, response, and config in HTTP status errors', async () => {
+      // Given: server returns 404
+      fetchMock.mockResolvedValueOnce({
+        status: 404,
+        statusText: 'Not Found',
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ error: 'Not found' }),
+      });
+
+      // When: making request
+      const config = { url: '/missing', validateStatus: (status: number) => status === 200 };
+      const result = await client.get('/missing', config);
+
+      // Then: error should contain request, response, and config
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.request).toBeDefined();
+        expect(result.error.response).toBeDefined();
+        expect(result.error.config).toBeDefined();
+        expect(result.error.status).toBe(404);
+        expect(result.error.response?.status).toBe(404);
+        expect(result.error.config?.url).toBe('/missing');
+      }
+    });
+
+    it('should include request and config in timeout errors', async () => {
+      // Given: fetch throws timeout error
+      const timeoutErr = new Error('Timeout');
+      timeoutErr.name = 'TimeoutError';
+      fetchMock.mockRejectedValueOnce(timeoutErr);
+
+      // When: making request with timeout config
+      const result = await client.get('/slow', { timeout: 100 });
+
+      // Then: error should contain request and config
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.request).toBeDefined();
+        expect(result.error.config).toBeDefined();
+        expect(result.error.code).toBe('TIMEOUT');
+      }
+    });
+
+    it('should include request and config in abort errors', async () => {
+      // Given: fetch throws abort error
+      const abortErr = new DOMException('Abort', 'AbortError');
+      fetchMock.mockRejectedValueOnce(abortErr);
+
+      // When: making request with signal
+      const controller = new AbortController();
+      const result = await client.get('/abort', { signal: controller.signal });
+      controller.abort();
+
+      // Then: error should contain request and config
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.request).toBeDefined();
+        expect(result.error.config).toBeDefined();
+        expect(result.error.code).toBe('ABORTED');
+      }
+    });
+  });
+
   describe('Basic HTTP Methods', () => {
     describe('GET requests', () => {
       it('should make a GET request and return Result<Ok, Response>', async () => {
@@ -198,6 +282,52 @@ describe('HTTP Client Plugin', () => {
       expect(result.ok).toBe(true);
       expect(fetchMock).toHaveBeenCalledTimes(3);
     });
+
+    it('should retry based on custom condition function', async () => {
+      // Given: first call fails with 500, second succeeds
+      fetchMock
+        .mockResolvedValueOnce({ status: 500, statusText: 'Server Error', headers: new Headers(), text: async () => 'Error' })
+        .mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          headers: new Headers(),
+          json: async () => ({ success: true }),
+        });
+
+      // When: making request with custom retry condition (only retry on 500)
+      const result = await client.get('/conditional', {
+        retry: {
+          maxAttempts: 3,
+          backoffMs: 10,
+          on: (error) => error.status === 500, // only retry on 500
+        }
+      });
+
+      // Then: should retry once and succeed
+      expect(result.ok).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(2); // 500 (retry), 200
+    });
+
+    it('should not retry when condition returns false', async () => {
+      // Given: call fails with 404 (not retryable per condition)
+      fetchMock.mockResolvedValueOnce({ status: 404, statusText: 'Not Found', headers: new Headers(), text: async () => 'Not found' });
+
+      // When: making request with custom retry condition (only retry on 500)
+      const result = await client.get('/no-retry', {
+        retry: {
+          maxAttempts: 3,
+          backoffMs: 10,
+          on: (error) => error.status === 500,
+        }
+      });
+
+      // Then: should fail immediately without retry
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.status).toBe(404);
+      }
+      expect(fetchMock).toHaveBeenCalledTimes(1); // no retry
+    });
   });
 
   describe('Timeout handling', () => {
@@ -209,6 +339,94 @@ describe('HTTP Client Plugin', () => {
       const result = await client.get('/slow-endpoint', { timeout: 50 });
 
       // Then: should return timeout error
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('TIMEOUT');
+      }
+    });
+
+    it('should support connection timeout configuration', async () => {
+      // Given: request that never resolves (simulating slow connection)
+      fetchMock.mockImplementation(() => new Promise(() => {}));
+
+      // When: making request with connection timeout only
+      const result = await client.get('/slow-connect', {
+        timeout: { connection: 50 }
+      });
+
+      // Then: should timeout with TIMEOUT error
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('TIMEOUT');
+      }
+    });
+
+    it('should support response timeout configuration', async () => {
+      // Given: fetch resolves quickly but response body reading is slow
+      const slowJson = () => new Promise(resolve => setTimeout(() => resolve({}), 100));
+      fetchMock.mockResolvedValueOnce({
+        status: 200,
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        json: slowJson,
+        text: () => Promise.resolve(''),
+        blob: () => Promise.resolve(new Blob()),
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+        formData: () => Promise.resolve(new FormData()),
+        body: null,
+      });
+
+      // When: making request with response timeout only
+      const result = await client.get('/slow-response', {
+        timeout: { response: 50 }
+      });
+
+      // Then: should timeout with RESPONSE_TIMEOUT error
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('RESPONSE_TIMEOUT');
+      }
+    });
+
+    it('should support total timeout configuration', async () => {
+      // Given: request that never resolves
+      fetchMock.mockImplementation(() => new Promise(() => {}));
+
+      // When: making request with total timeout only
+      const result = await client.get('/slow-total', {
+        timeout: { total: 50 }
+      });
+
+      // Then: should timeout with TIMEOUT error
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('TIMEOUT');
+      }
+    });
+
+    it('should prioritize total timeout over connection/response', async () => {
+      // Given: request that never resolves
+      fetchMock.mockImplementation(() => new Promise(() => {}));
+
+      // When: making request with all timeouts set (total should win)
+      const result = await client.get('/priority', {
+        timeout: { connection: 1000, response: 1000, total: 50 }
+      });
+
+      // Then: should timeout with TIMEOUT error after total timeout
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('TIMEOUT');
+      }
+    });
+
+    it('should maintain backward compatibility with number timeout', async () => {
+      // Given: request that never resolves
+      fetchMock.mockImplementation(() => new Promise(() => {}));
+
+      // When: making request with number timeout (total)
+      const result = await client.get('/backward', { timeout: 50 });
+
+      // Then: should timeout with TIMEOUT error
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error.code).toBe('TIMEOUT');
@@ -1789,6 +2007,110 @@ describe('HTTP Client Plugin', () => {
 
       // Then: MetricsPlugin error count incremented
       expect(metricsPlugin).toBeDefined();
+    });
+  });
+
+  describe('Debug logging', () => {
+    it('should log request/response when debug is true', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const client = createHttpClient({ debug: true });
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: 'test' }), { status: 200 }));
+
+      await client.get('/test');
+
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should log verbose when debug is "verbose"', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const client = createHttpClient({ debug: 'verbose' });
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: 'test' }), { status: 200 }));
+
+      await client.get('/test');
+
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should not log when debug is false', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const client = createHttpClient({ debug: false });
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: 'test' }), { status: 200 }));
+
+      await client.get('/test');
+
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should allow request-level debug override', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const client = createHttpClient({ debug: false }); // global false
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: 'test' }), { status: 200 }));
+
+      await client.get('/test', { debug: true }); // request-level true
+
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should use custom logger when provided', async () => {
+      const mockLogger = vi.fn();
+      const client = createHttpClient({ debug: true, logger: mockLogger });
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: 'test' }), { status: 200 }));
+
+      await client.get('/test');
+
+      expect(mockLogger).toHaveBeenCalled();
+      expect(mockLogger).toHaveBeenCalledWith(expect.stringContaining('[Nexa HTTP]'), expect.anything());
+    });
+
+    it('should use custom logger with verbose debug', async () => {
+      const mockLogger = vi.fn();
+      const client = createHttpClient({ debug: 'verbose', logger: mockLogger });
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: 'test' }), { status: 200 }));
+
+      await client.get('/test');
+
+      expect(mockLogger).toHaveBeenCalled();
+      // Should have verbose logs
+      const calls = mockLogger.mock.calls;
+      const hasVerboseLog = calls.some(call => call[0].includes('Request after interceptors') || call[0].includes('Request after transformRequest'));
+      expect(hasVerboseLog).toBe(true);
+    });
+
+    it('should allow request-level logger override', async () => {
+      const globalLogger = vi.fn();
+      const requestLogger = vi.fn();
+      const client = createHttpClient({ debug: true, logger: globalLogger });
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: 'test' }), { status: 200 }));
+
+      await client.get('/test', { logger: requestLogger });
+
+      expect(requestLogger).toHaveBeenCalled();
+      expect(globalLogger).not.toHaveBeenCalled();
+    });
+
+    it('should not log when debug is false even with logger provided', async () => {
+      const mockLogger = vi.fn();
+      const client = createHttpClient({ debug: false, logger: mockLogger });
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: 'test' }), { status: 200 }));
+
+      await client.get('/test');
+
+      expect(mockLogger).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to console.log when logger is undefined', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const client = createHttpClient({ debug: true, logger: undefined });
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ data: 'test' }), { status: 200 }));
+
+      await client.get('/test');
+
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
     });
   });
 });

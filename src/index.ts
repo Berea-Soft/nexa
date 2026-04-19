@@ -4,3 +4,10 @@
  */
 
 export * from './http-client';
+
+// Realtime communication
+export * from './realtime/index.js';
+
+// Testing utilities
+export { createMockClient, MockAdapter } from './testing/index.js';
+export type { MockResponse, MockClientOptions } from './testing/index.js';

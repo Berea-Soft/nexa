@@ -23,6 +23,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src/**/*.ts", "test/http-client.test.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["test/**/*", "dist/**/*"]
 }

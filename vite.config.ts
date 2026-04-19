@@ -2,7 +2,7 @@ import { defineConfig, type UserConfig } from "vite";
 import { dirname, resolve } from "path";
 import { existsSync, readFileSync, rmSync } from "fs";
 import { fileURLToPath } from "url";
-import dts from 'vite-plugin-dts'
+import dts from "vite-plugin-dts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,9 +22,8 @@ export default defineConfig({
       rollupTypes: false,
       insertTypesEntry: true,
       copyDtsFiles: true,
-      entryRoot: resolve(__dirname, "src"),
-      outDir: resolve(__dirname, "dist/types"),
-      strictOutput: true,
+      entryRoot: "src",
+      outDir: "dist/types",
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/**/*.spec.ts"],
       beforeWriteFile: (filePath, content) => {
@@ -48,19 +47,20 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
       name: "Nexa",
-      formats: ["es", "cjs", "umd", "iife"],
       fileName: (format) => `nexa.${format === "cjs" ? "cjs" : format}.js`,
+      formats: ["es", "cjs", "umd", "iife"],
     },
     rollupOptions: {
-      external: ['fs'],
+      external: ['fs', 'path', 'http', 'https', 'http2'],
       output: {
         banner,
+        exports: "named" as const,
+        inlineDynamicImports: true,
       },
     },
-    emptyOutDir: true,
-    sourcemap: false,
+    emptyOutDir: false,
+    sourcemap: true,
     minify: "oxc",
-    target: "es2024",
     reportCompressedSize: true,
   },
 } as UserConfig);

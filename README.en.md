@@ -6,12 +6,12 @@
 </p>
 
 <p align="center">
-  <a href="#tests"><img src="https://img.shields.io/badge/Tests-157_passing-brightgreen?style=for-the-badge" alt="Tests" /></a>
-  <a href="#test-coverage"><img src="https://img.shields.io/badge/Coverage-75.73%25-orange?style=for-the-badge" alt="Coverage" /></a>
+  <a href="#tests"><img src="https://img.shields.io/badge/Tests-233_passing-brightgreen?style=for-the-badge" alt="Tests" /></a>
+  <a href="#test-coverage"><img src="https://img.shields.io/badge/Coverage-72%25-orange?style=for-the-badge" alt="Coverage" /></a>
   <a href="https://www.npmjs.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/npm/v/@bereasoftware/nexa?style=for-the-badge" alt="NPM Version" /></a>
   <a href="https://bundlephobia.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/bundlephobia/minzip/@bereasoftware/nexa?label=Bundle&style=for-the-badge" alt="Bundle Size" /></a>
   <a href="https://www.npmjs.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/npm/dm/@bereasoftware/nexa?style=for-the-badge" alt="NPM Downloads" /></a>
-  <img src="https://img.shields.io/badge/Node-18%2B-success?style=for-the-badge" alt="Node" />
+  <img src="https://img.shields.io/badge/Node-20%2B-success?style=for-the-badge" alt="Node" />
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Dependencies-Zero-brightgreen?style=for-the-badge" alt="Dependencies" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License" /></a>
@@ -48,6 +48,13 @@
 | Validators & transformers       |   ❌    |   ❌    |    ✅    |
 | Response duration tracking      |   ❌    |   ❌    |    ✅    |
 | Smart response type detection   |   ❌    |   ✅    |    ✅    |
+| Request transformation (transformRequest)   |   ❌    |   ✅    |    ✅    |
+| Credentials policy   |   ✅    |   ✅    |    ✅    |
+| Adapter pattern (mocking/testing)   |   ❌    |   ✅    |    ✅    |
+| Automatic FormData conversion   |   ❌    |   ❌    |    ✅    |
+| Enhanced error context (request/response/config)   |   ❌    |   ✅    |    ✅    |
+| Differentiated timeouts (connection vs response)   |   ❌    |   ❌    |    ✅    |
+| Debug logging (development mode)                   |   ❌    |   ❌    |    ✅    |
 | Tree-shakeable                  |   ✅    |   ❌    |    ✅    |
 
 ---
@@ -64,6 +71,10 @@
   - [Path Parameters](#path-parameters)
   - [Query Parameters](#query-parameters)
   - [Auto Body Serialization](#auto-body-serialization)
+  - [Request Transformation (transformRequest)](#request-transformation-transformrequest)
+  - [Credentials Policy](#credentials-policy)
+  - [Adapter Pattern](#adapter-pattern)
+  - [Transport Configuration](#transport-configuration)
   - [Response Types](#response-types)
   - [Timeout](#timeout)
 - [Retry Strategies](#retry-strategies)
@@ -91,6 +102,7 @@
 - [Streaming](#streaming)
 - [Typed Generics](#typed-generics)
 - [Error Handling](#error-handling)
+  - [Enhanced Error Context](#enhanced-error-context)
 - [API Reference](#api-reference)
 - [Build Formats](#build-formats)
 - [Development](#development)
@@ -207,6 +219,8 @@ const client = createHttpClient({
 | `maxConcurrent`       | `number`                      | `0` (unlimited)                          | Max concurrent requests                    |
 | `defaultResponseType` | `ResponseType`                | `'auto'`                                 | Default response parsing strategy          |
 | `defaultHooks`        | `RequestHooks`                | `{}`                                     | Default lifecycle hooks for all requests   |
+| `debug`               | `boolean \| 'verbose'`        | `undefined`                              | Enable debug logging for requests/responses. `true` for basic logs, `'verbose'` for detailed logs. |
+| `logger`              | `(message: string, data?: unknown) => void` | `undefined`                              | Custom logger function. If provided, replaces the default console.log with custom logging. |
 
 ---
 
@@ -289,6 +303,8 @@ Nexa automatically detects and serializes the request body:
 | `ArrayBuffer`      | Passed as-is       | `application/octet-stream`          |
 | `ReadableStream`   | Passed as-is       | `application/octet-stream`          |
 
+When `autoFormData` is enabled (default), objects containing `File` or `Blob` instances are automatically converted to `FormData`. This is useful for uploading files without manually creating `FormData` instances.
+
 ```typescript
 // JSON (automatic)
 await client.post("/users", { name: "John" });
@@ -304,6 +320,172 @@ await client.post(
   new URLSearchParams({ user: "john", pass: "secret" }),
 );
 ```
+
+### Request Transformation (transformRequest)
+
+Nexa supports request transformation similar to axios's `transformRequest`. You can provide a function or array of functions that transform the request body before serialization. The transformation is applied after interceptors and before serialization.
+
+```typescript
+// Global configuration
+const client = createHttpClient({
+  transformRequest: [(data, headers) => {
+    // Add timestamp to all requests
+    if (data && typeof data === 'object') {
+      return { ...data, timestamp: Date.now() };
+    }
+    return data;
+  }]
+});
+
+// Per-request configuration
+await client.post('/api', { foo: 'bar' }, {
+  transformRequest: [(data) => ({ ...data, extra: 'value' })]
+});
+```
+
+### Credentials Policy
+
+Nexa supports the standard fetch `credentials` option as well as axios-compatible `withCredentials` boolean. This controls whether cookies and other credentials are sent with cross-origin requests.
+
+```typescript
+// Using fetch-style credentials
+await client.get('/api', { credentials: 'include' });
+
+// Using axios-style withCredentials (true = 'include', false = 'same-origin')
+await client.post('/api', data, { withCredentials: true });
+
+// Global configuration
+const client = createHttpClient({
+  credentials: 'same-origin', // Default: 'omit'
+  // or
+  withCredentials: true, // Equivalent to credentials: 'include'
+});
+```
+
+Priority: `credentials` overrides `withCredentials` if both are specified.
+
+### Adapter Pattern
+
+Nexa supports custom adapters for mocking, testing, or integrating with different environments (Cloudflare Workers, Node.js, etc.). The adapter has the same signature as the global `fetch` function.
+
+```typescript
+// Mock adapter for testing
+const mockAdapter = async (input: RequestInfo, init?: RequestInit) => {
+  return new Response(JSON.stringify({ mock: true }), { status: 200 });
+};
+
+// Global adapter
+const client = createHttpClient({
+  adapter: mockAdapter,
+});
+
+// Per-request adapter (overrides global)
+await client.get('/api', { adapter: mockAdapter });
+```
+
+Adapters can be used to intercept requests before they reach the network, enabling easy testing without actual HTTP calls.
+
+### Mocking Utilities (axios-mock-adapter style)
+
+For more sophisticated testing scenarios, Nexa provides a mocking utility similar to `axios-mock-adapter`. This allows you to configure mock responses for specific routes and HTTP methods.
+
+```typescript
+import { createHttpClient } from '@bereasoftware/nexa';
+import { createMockClient } from '@bereasoftware/nexa/testing';
+
+const client = createHttpClient({ baseURL: 'https://api.example.com' });
+const mockClient = createMockClient(client);
+
+// Configure mock responses
+mockClient.onGet('/users').reply(200, [{ id: 1, name: 'John' }]);
+mockClient.onPost('/users').reply(201, { id: 2, name: 'Jane' });
+mockClient.onPut('/users/1').reply(200, { id: 1, name: 'Updated' });
+mockClient.onDelete('/users/1').reply(204);
+
+// Network error simulation
+mockClient.onGet('/error').networkError('Network failure');
+
+// Use the mock-enabled client for requests
+const result = await mockClient.client.get('/users');
+if (result.ok) {
+  console.log(result.value.data); // [{ id: 1, name: 'John' }]
+}
+
+// Advanced: reply once, then fall through
+mockClient.onGet('/once').replyOnce(200, { data: 'first' });
+// Second call to same route will not match (unless passthrough enabled)
+
+// Advanced: function-based responses
+mockClient.onGet('/dynamic').reply((config) => ({
+  status: 200,
+  data: { url: config.url, query: config.query },
+}));
+
+// Reset mock routes between tests
+mockClient.reset();
+```
+
+**Key features:**
+- **Fluent API**: `onGet(url).reply(status, data)` similar to axios-mock-adapter
+- **URL patterns**: Support string exact match or RegExp
+- **Response functions**: Dynamic responses based on request config
+- **Call limits**: `replyOnce()` for one-time mock
+- **Network errors**: Simulate network failures with `networkError()`
+- **Timeout simulation**: `timeout()` method for timeout testing
+- **Passthrough mode**: Optionally forward unmatched requests to real adapter
+- **Base URL support**: Automatically strips baseURL when matching
+
+**Options** for `createMockClient`:
+- `passthrough`: Forward unmatched requests to original adapter (default: `false`)
+- `baseURL`: Base URL to strip when matching routes
+- `delay`: Default delay for all responses (ms)
+
+### Transport Configuration
+
+Nexa supports multiple transport layers for different environments. By default, it uses the global `fetch` API (available in browsers and Node.js 18+). For advanced Node.js scenarios, you can use the native HTTP/1.1 or HTTP/2 modules with keep-alive, connection pooling, and other Node-specific optimizations.
+
+```typescript
+import { createHttpClient } from '@bereasoftware/nexa';
+
+// Use Node.js HTTP/1.1 with keep-alive and connection pooling
+const client = createHttpClient({
+  transport: 'node', // 'fetch' (default), 'node', or 'http2'
+  nodeOptions: {
+    keepAlive: true,
+    maxSockets: 50,
+    maxFreeSockets: 10,
+    maxRequestsPerSocket: 0, // unlimited
+    timeout: 60000,
+  },
+});
+
+// Use HTTP/2 for better performance with multiplexing
+const http2Client = createHttpClient({
+  transport: 'http2',
+  nodeOptions: {
+    http2Settings: {
+      enablePush: false,
+    },
+  },
+});
+
+// Override transport per request
+await client.get('/api', {
+  transport: 'http2',
+  nodeOptions: { keepAlive: true },
+});
+```
+
+**Note:** Node transports (`'node'` and `'http2'`) are only available in Node.js environments. In browsers, they will fall back to `'fetch'` automatically.
+
+**Available options in `nodeOptions`:**
+- `keepAlive` (boolean): Enable keep-alive connections (default: `true`)
+- `maxSockets` (number): Maximum sockets per host (default: `50`)
+- `maxFreeSockets` (number): Maximum free sockets to keep open (default: `10`)
+- `maxRequestsPerSocket` (number): Maximum requests per socket (default: `0` = unlimited)
+- `timeout` (number): Socket timeout in milliseconds (default: `60000`)
+- `http2` (boolean): Deprecated - use `transport: 'http2'` instead
+- `http2Settings` (Record<string, unknown>): HTTP/2 specific settings (only for `transport: 'http2'`)
 
 ### Response Types
 
@@ -349,8 +531,64 @@ const result = await client.get("/slow-endpoint", { timeout: 5000 });
 // Timeout produces a specific error code
 if (!result.ok && result.error.code === "TIMEOUT") {
   console.log("Request timed out");
-}
 ```
+
+Nexa also supports differentiated timeouts for connection and response phases, going beyond axios/fetch's single timeout. You can specify timeouts as an object:
+
+```typescript
+// Differentiated timeouts
+await client.get('/api', {
+  timeout: {
+    connection: 3000,  // 3 seconds to establish connection
+    response: 10000,   // 10 seconds to receive complete response
+    total: 15000       // Optional total timeout (overrides connection/response)
+  }
+});
+
+// Backward compatibility: number still works (total timeout)
+await client.get('/api', { timeout: 5000 });
+```
+
+Error codes: `TIMEOUT` for connection/total timeouts, `RESPONSE_TIMEOUT` for response phase timeouts.
+
+### Debug Logging
+
+Nexa provides axios-like debug logging for development. Enable it globally or per-request:
+
+```typescript
+// Global debug logging
+const client = createHttpClient({
+  debug: true, // basic logs
+  // debug: 'verbose', // detailed logs
+});
+
+// Per-request override
+await client.get('/api', { debug: 'verbose' });
+```
+
+Logs include request method/URL, response status, duration, errors, retries, and cache hits. With `verbose` mode, you also see transformed requests, interceptor outputs, and response data.
+
+#### Custom Logger
+
+You can provide a custom logger function to redirect logs to your preferred logging system:
+
+```typescript
+const client = createHttpClient({
+  debug: true,
+  logger: (message, data) => {
+    // Send to your logging service
+    myLogger.info(message, data);
+  },
+});
+
+// Request-level logger override
+await client.post('/api', data, { 
+  debug: true,
+  logger: (msg, data) => console.warn(msg, data)
+});
+```
+
+The logger receives two arguments: the log message (prefixed with `[Nexa HTTP]`) and optional data object.
 
 ---
 
@@ -366,6 +604,27 @@ const result = await client.get("/unstable-api", {
 });
 // Retries up to 3 times with exponential backoff + jitter
 ```
+
+### Custom Retry Condition
+
+You can provide a custom condition function to decide which errors should be retried:
+
+```typescript
+const result = await client.get('/api', {
+  retry: {
+    maxAttempts: 3,
+    backoffMs: 1000,
+    on: (error) => {
+      // Retry only on network errors or 5xx status
+      return error.code === 'NETWORK_ERROR' || 
+             (error.status >= 500 && error.status < 600) ||
+             error.message.includes('ECONNRESET')
+    }
+  }
+});
+```
+
+The `on` function receives the `HttpErrorDetails` and attempt number, and returns `true` if the request should be retried. If `on` is not provided, the default condition (5xx status, network errors, timeouts) is used.
 
 ### AggressiveRetry
 
@@ -1088,6 +1347,22 @@ deferred.reject(new Error("failed"));
 | `MAX_RETRIES`      | All retry attempts exhausted                            |
 | `UNKNOWN_ERROR`    | Unclassified error                                      |
 
+### Enhanced Error Context
+
+Nexa provides rich error context similar to axios, including the original request, response, and configuration in error objects. This makes debugging easier.
+
+```typescript
+const result = await client.get('/api');
+if (!result.ok) {
+  const { request, response, config } = result.error;
+  console.log('Failed request URL:', request?.url);
+  console.log('Response status:', response?.status);
+  console.log('Config timeout:', config?.timeout);
+}
+```
+
+All errors now include `request`, `response` (if available), and `config` properties.
+
 ### HttpError Class
 
 ```typescript
@@ -1199,7 +1474,7 @@ Nexa ships in multiple module formats:
 
 ### Tests
 
-**157 tests in total**: 88 HTTP Client tests + 69 utilities tests
+**205 tests in total**: 88 HTTP Client tests + 69 utilities tests + 24 mock tests + 4 Node adapter tests + 20 additional tests
 
 ```bash
 # Run all tests
@@ -1242,13 +1517,14 @@ dist/
 
 ### Test Coverage
 
-**Overall Coverage: 75.73%** — solid unit test coverage with mock-based HTTP testing
+**Overall Coverage: 71.4%** — solid unit test coverage with mock-based HTTP testing
 
 | Component   | Coverage   | Details                           |
 | ----------- | ---------- | --------------------------------- |
-| HTTP Client | **80.85%** | 81.25% branches, 73.43% functions |
+| HTTP Client | **66.7%** | 67.3% branches, 67.0% functions |
 | Types       | **100%**   | Perfect type coverage             |
-| Utils       | **71.79%** | 66.66% branches, 81.14% functions |
+| Testing     | **93.7%**  | 85.1% branches, 95.8% functions   |
+| Utils       | **71.8%**  | 66.7% branches, 81.1% functions   |
 
 **HTTP Client** (`test/http-client.test.ts`) — **88 tests**:
 
@@ -1279,7 +1555,7 @@ dist/
 - \u2713 Cache Middleware: GET caching, POST bypass (2 tests)
 - \u2713 Dedup Middleware: GET dedup, POST bypass (2 tests)
 - \u2713 Typed Generics: TypedResponse, TypedObservable (map/filter), Defer, type guards, branded types (9 tests)
-- \u2713 Plugins: PluginManager, LoggerPlugin, MetricsPlugin, CachePlugin, DedupePlugin (5 tests)\n\n### Coverage Limitations & Realistic Ceiling\n\nUnit test coverage plateaus around **75-80%** due to inherent mock-based testing limitations:\n\n**Why not 95%?**\n- **Streaming features** (~3-5% gap): Download progress tracking uses `ReadableStream.getReader()` which requires real HTTP streams—not mockable with `fetch-mock`\n- **Utility examples** (~5-10% gap): Middleware patterns and reference code are intentionally not exercised in production \n- **Export-only files** (~2-3% gap): `http-client/index.ts` verified via import validation, not unit testable\n\n**Realistic maximums:**\n- Unit tests + mocks: **~80-85%** ceiling (current: 75.73%)\n- Integration tests required: Would reach 90%+ but beyond this project\u2019s scope\n\nThe 75.73% coverage represents comprehensive testing of all **production code paths** that can be reached via HTTP mocks.
+- \u2713 Plugins: PluginManager, LoggerPlugin, MetricsPlugin, CachePlugin, DedupePlugin (5 tests)\n\n### Coverage Limitations & Realistic Ceiling\n\nUnit test coverage plateaus around **75-80%** due to inherent mock-based testing limitations:\n\n**Why not 95%?**\n- **Streaming features** (~3-5% gap): Download progress tracking uses `ReadableStream.getReader()` which requires real HTTP streams—not mockable with `fetch-mock`\n- **Utility examples** (~5-10% gap): Middleware patterns and reference code are intentionally not exercised in production \n- **Export-only files** (~2-3% gap): `http-client/index.ts` verified via import validation, not unit testable\n\n**Realistic maximums:**\n- Unit tests + mocks: **~80-85%** ceiling (current: 71.4%)\n- Integration tests required: Would reach 90%+ but beyond this project\u2019s scope\n\nThe 71.4% coverage represents comprehensive testing of all **production code paths** that can be reached via HTTP mocks.
 
 ---
 

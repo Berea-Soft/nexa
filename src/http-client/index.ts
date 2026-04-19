@@ -54,6 +54,11 @@ export {
   RequestDeduplicator,
   createDedupeMiddleware,
   dedupeMiddleware,
+  // Advanced: Rate Limiting & Circuit Breaker
+  createRateLimitMiddleware,
+  rateLimitMiddleware,
+  createCircuitBreakerMiddleware,
+  circuitBreakerMiddleware,
   // Advanced: Middleware Pipeline
   MiddlewarePipeline,
   createPipeline,
@@ -88,5 +93,7 @@ export {
   MetricsPlugin,
   CachePlugin,
   DedupePlugin,
+  RateLimitPlugin,
+  CircuitBreakerPlugin,
   type Plugin,
 } from '../utils';
