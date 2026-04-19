@@ -110,6 +110,8 @@
 - [Referencia de API](#referencia-de-api)
 - [Formatos de Build](#formatos-de-build)
 - [Desarrollo](#desarrollo)
+- [Contribución](#contribución)
+- [Seguridad](#seguridad)
 - [Licencia](#licencia)
 
 ---
@@ -1656,6 +1658,14 @@ La cobertura de tests unitarios se estabiliza alrededor del **75-80%** debido a 
 El 71.4% de cobertura representa testing exhaustivo de todas las **rutas de código de producción** alcanzables vía mocks HTTP.
 
 ---
+
+## Contribución
+
+¿Quieres contribuir a Nexa? Por favor lee nuestra [guía de contribución](CONTRIBUTING.es.md) y [código de conducta](CODE_OF_CONDUCT.md).
+
+## Seguridad
+
+Para reportar vulnerabilidades de seguridad, consulta nuestra [política de seguridad](SECURITY.es.md).
 
 ## Licencia
 

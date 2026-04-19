@@ -106,6 +106,8 @@
 - [API Reference](#api-reference)
 - [Build Formats](#build-formats)
 - [Development](#development)
+- [Contributing](#contributing)
+- [Security](#security)
 - [License](#license)
 
 ---
@@ -1558,6 +1560,14 @@ dist/
 - \u2713 Plugins: PluginManager, LoggerPlugin, MetricsPlugin, CachePlugin, DedupePlugin (5 tests)\n\n### Coverage Limitations & Realistic Ceiling\n\nUnit test coverage plateaus around **75-80%** due to inherent mock-based testing limitations:\n\n**Why not 95%?**\n- **Streaming features** (~3-5% gap): Download progress tracking uses `ReadableStream.getReader()` which requires real HTTP streams—not mockable with `fetch-mock`\n- **Utility examples** (~5-10% gap): Middleware patterns and reference code are intentionally not exercised in production \n- **Export-only files** (~2-3% gap): `http-client/index.ts` verified via import validation, not unit testable\n\n**Realistic maximums:**\n- Unit tests + mocks: **~80-85%** ceiling (current: 71.4%)\n- Integration tests required: Would reach 90%+ but beyond this project\u2019s scope\n\nThe 71.4% coverage represents comprehensive testing of all **production code paths** that can be reached via HTTP mocks.
 
 ---
+
+## Contributing
+
+Want to contribute to Nexa? Please read our [contributing guide](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+To report security vulnerabilities, see our [security policy](SECURITY.md).
 
 ## License
 

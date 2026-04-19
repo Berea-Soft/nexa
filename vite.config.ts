@@ -51,13 +51,14 @@ export default defineConfig({
       formats: ["es", "cjs", "umd", "iife"],
     },
     rollupOptions: {
-      external: ['fs', 'path', 'http', 'https', 'http2'],
+      external: ['fs', 'fs/promises', 'path', 'http', 'https', 'http2', 'ws'],
       output: {
         banner,
         exports: "named" as const,
         inlineDynamicImports: true,
       },
     },
+    codeSplitting: false,
     emptyOutDir: false,
     sourcemap: true,
     minify: "oxc",

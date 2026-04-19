@@ -53,6 +53,8 @@
   "author": "John Andrade <johnandrade@bereasoft.com>",
   "license": "MIT",
   "description": "Nexa is a TypeScript HTTP client library that combines the power of fetch with the convenience of axios, while adhering to SOLID principles. It provides a flexible and extensible API for making HTTP requests, handling retries, caching, and more.",
+  "about": "Nexa is designed to be a modern, type-safe HTTP client that simplifies the process of making API requests in TypeScript. It offers features such as request and response interceptors, automatic retries with exponential backoff, caching mechanisms, and a result type for better error handling. With support for both ESM and CommonJS, Nexa can be easily integrated into any TypeScript project.",
+  "homepage": "https://github.com/Berea-Soft/nexa",
   "maintainers": [
     {
       "name": "John Andrade",
