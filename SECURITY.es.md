@@ -173,6 +173,15 @@ Nexa tiene **cero dependencias de tiempo de ejecución** para el cliente HTTP ce
 
 Todas las dependencias son auditadas y actualizadas regularmente.
 
+### Nota sobre vulnerabilidades del CLI de npm
+
+Al ejecutar `npm audit` en Nexa, puedes ver vulnerabilidades reportadas en `node_modules/npm/node_modules/`. Estas son vulnerabilidades en la herramienta CLI de npm misma, no en las dependencias de Nexa. Nexa tiene cero dependencias de producción, por lo que estas vulnerabilidades no afectan a las aplicaciones que usan Nexa.
+
+Para abordar vulnerabilidades del CLI de npm:
+1. Actualiza Node.js a la última versión LTS
+2. Actualiza npm globalmente: `npm install -g npm@latest`
+3. El pipeline de CI para Nexa usa `--audit-level=critical` para ignorar vulnerabilidades no críticas en herramientas de desarrollo
+
 ## Contacto
 
 - **Email de seguridad**: johnandrade@bereasoft.com

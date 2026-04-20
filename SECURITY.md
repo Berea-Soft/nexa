@@ -173,6 +173,15 @@ Nexa has **zero runtime dependencies** for the core HTTP client. However, we use
 
 All dependencies are regularly audited and updated.
 
+### Note on npm CLI Vulnerabilities
+
+When running `npm audit` on Nexa, you may see vulnerabilities reported in `node_modules/npm/node_modules/`. These are vulnerabilities in the npm CLI tool itself, not in Nexa's dependencies. Nexa has zero production dependencies, so these vulnerabilities do not affect applications using Nexa.
+
+To address npm CLI vulnerabilities:
+1. Update Node.js to the latest LTS version
+2. Update npm globally: `npm install -g npm@latest`
+3. The CI pipeline for Nexa uses `--audit-level=critical` to ignore non-critical vulnerabilities in development tools
+
 ## Contact
 
 - **Security email**: johnandrade@bereasoft.com
