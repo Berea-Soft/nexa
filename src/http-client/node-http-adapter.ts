@@ -130,6 +130,10 @@ class Http2SessionPool {
 // Global session pool instance
 const http2SessionPool = new Http2SessionPool();
 
+/**
+ * Dynamically import Node.js built-in modules for HTTP/HTTPS.
+ * Security: These are core Node.js modules, not third-party dependencies.
+ */
 async function getHttp() {
   if (!http) {
     http = await import('http');
@@ -138,6 +142,10 @@ async function getHttp() {
   return { http: http!, https: https! };
 }
 
+/**
+ * Dynamically import Node.js built-in module for HTTP/2.
+ * Security: This is a core Node.js module, not a third-party dependency.
+ */
 async function getHttp2() {
   if (!http2) {
     http2 = await import('http2');

@@ -1052,6 +1052,7 @@ export async function streamToFile(
   // For Node.js, you'd use fs.writeFile
   if (typeof window === 'undefined') {
     // Node.js environment
+    // Security: Dynamically import Node.js built-in 'fs' module for file operations
     const fs = await import('fs').then((m) => m.promises);
     await fs.writeFile(filePath, data);
   } else {

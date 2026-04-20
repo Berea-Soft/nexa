@@ -82,6 +82,12 @@ Nexa es una librería cliente HTTP que maneja comunicación de red. Áreas clave
 - **Validación de mensajes**: Manejo de mensajes type-safe
 - **Gestión de conexiones**: Lógica de reconexión segura
 
+### Acceso a red y seguridad de la cadena de suministro
+- **Módulos incorporados solamente**: Nexa usa importaciones dinámicas solo para módulos incorporados de Node.js (`http`, `https`, `http2`, `fs`)
+- **Dependencias opcionales**: El soporte WebSocket requiere el paquete opcional `ws`, que debe ser instalado explícitamente por el usuario
+- **Sin descargas automáticas**: Nexa no descarga ni ejecuta código de fuentes externas en tiempo de ejecución
+- **Acceso a red transparente**: Como librería cliente HTTP, Nexa realiza peticiones de red según las instrucciones del código del usuario
+
 ## Mejores prácticas para usuarios
 
 ### Configuración

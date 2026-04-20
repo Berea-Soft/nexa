@@ -82,6 +82,12 @@ Nexa is an HTTP client library that handles network communication. Key security 
 - **Message validation**: Type-safe message handling
 - **Connection management**: Secure reconnection logic
 
+### Network Access and Supply Chain Security
+- **Built-in modules only**: Nexa uses dynamic imports only for Node.js built-in modules (`http`, `https`, `http2`, `fs`)
+- **Optional dependencies**: WebSocket support requires optional `ws` package, which must be explicitly installed by the user
+- **No automatic downloads**: Nexa does not download or execute code from external sources at runtime
+- **Transparent network access**: As an HTTP client library, Nexa performs network requests as directed by user code
+
 ## Best Practices for Users
 
 ### Configuration

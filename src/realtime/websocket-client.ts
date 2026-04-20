@@ -352,6 +352,8 @@ class NodeWebSocketClient extends BrowserWebSocketClient {
   async connect(): Promise<void> {
     if (isNode()) {
       try {
+        // Security: Optional dependency 'ws' for Node.js WebSocket support
+        // This is a dynamic import that only loads if the package is installed
         // @ts-ignore - optional dependency
         const { default: _WebSocket } = await import('ws');
         // Override socket creation
