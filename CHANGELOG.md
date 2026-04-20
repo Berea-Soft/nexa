@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/Berea-Soft/nexa/compare/v1.1.0...v1.2.0) (2026-04-20)
+
+
+### Features
+
+* enhance security measures by adding audits and dynamic imports for built-in modules ([f54c565](https://github.com/Berea-Soft/nexa/commit/f54c565a4484e58f34173e3891f0645b52fa5d71))
+
 # [1.1.0](https://github.com/Berea-Soft/nexa/compare/v1.0.5...v1.1.0) (2026-04-19)
 
 
