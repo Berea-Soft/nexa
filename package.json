@@ -71,28 +71,48 @@
     "> 1%"
   ],
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --config playground/vite.config.ts",
     "build": "tsc && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "lint": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "benchmark": "node scripts/benchmark.mjs",
+    "prepare": "echo \"husky ready\"",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.58.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.6",
     "@semantic-release/npm": "^13.1.5",
     "@types/node": "^25.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "@vitest/coverage-v8": "^4.1.2",
     "@vitest/ui": "^4.1.2",
+    "eslint": "^9.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
     "semantic-release": "^25.0.3",
     "typescript": "~6.0.2",
     "vite": "^8.0.3",
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.1.2"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "prettier --write",
+      "eslint --fix --max-warnings=0"
+    ]
+  },
+  "dependencies": {
+    "axios": "^1.16.1"
   }
 }

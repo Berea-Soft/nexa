@@ -22,5 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.npmrc
 coverage/*
+.examples/*
+LINKEDIN_POST.md

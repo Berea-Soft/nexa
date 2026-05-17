@@ -1,4 +1,5 @@
 <p align="center">
+  <img src="src/assets/Logo.png" alt="Nexa Logo" />
   <h1 align="center">@bereasoftware/nexa</h1>
   <p align="center">
     Un cliente HTTP moderno y type-safe que combina el poder de <code>fetch</code> con la comodidad de <code>axios</code> — construido sobre principios SOLID.
@@ -12,9 +13,10 @@
   <a href="https://bundlephobia.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/bundlephobia/minzip/@bereasoftware/nexa?label=Bundle&style=for-the-badge" alt="Bundle Size" /></a>
   <a href="https://www.npmjs.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/npm/dm/@bereasoftware/nexa?style=for-the-badge" alt="NPM Downloads" /></a>
   <img src="https://img.shields.io/badge/Node-20%2B-success?style=for-the-badge" alt="Node" />
-  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/TypeScript-6.x-3178C6?style=for-the-badge" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Dependencias-Cero-brightgreen?style=for-the-badge" alt="Dependencies" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/Licencia-MIT-yellow?style=for-the-badge" alt="License" /></a>
+  <img src="https://img.shields.io/badge/Mantenimiento-Activo-success?style=for-the-badge" alt="Maintenance" />
   <a href="https://github.com/Berea-Soft/nexa"><img src="https://img.shields.io/badge/github-Repositorio-blue?logo=github&style=for-the-badge" alt="Repository" /></a>
 </p>
 
@@ -22,6 +24,16 @@
 >
 > - 🇪🇸 **Español** (este archivo - README.md)
 > - 🇬🇧 **English** (README.en.md)
+
+> 📖 **Documentación adicional:**
+>
+> - [Arquitectura](ARCHITECTURE.md) — Diseño del sistema
+> - [Diseño](DESIGN.md) — Filosofía y decisiones de diseño
+> - [Seguridad](SECURITY.md) — Política de seguridad
+> - [Contribuir](CONTRIBUTING.md) — Guía para colaboradores
+> - [Migración](MIGRATION.md) — Desde axios/fetch
+> - [Soporte](SUPPORT.md) — Cómo obtener ayuda
+> - [Skills](SKILLS.md) — Competencias del proyecto
 
 ---
 
@@ -49,6 +61,7 @@
 | Tracking de duración de respuesta          |   ❌    |   ❌    |    ✅    |
 | Detección inteligente de tipo de respuesta |   ❌    |   ✅    |    ✅    |
 | Tree-shakeable                             |   ✅    |   ❌    |    ✅    |
+| Dev Overlay (herramientas de desarrollo)   |   ❌    |   ❌    |    ✅    |
 
 ---
 
@@ -88,6 +101,7 @@
 - [Transformadores](#transformadores)
 - [Pipeline de Middleware](#pipeline-de-middleware)
 - [Sistema de Plugins](#sistema-de-plugins)
+- [Dev Overlay](#dev-overlay)
 - [Streaming](#streaming)
 - [Generics Tipados](#generics-tipados)
 - [Manejo de Errores](#manejo-de-errores)
@@ -940,6 +954,69 @@ manager.register(rateLimitPlugin);
 
 ---
 
+## Dev Overlay
+
+Herramienta visual de desarrollo integrada para depurar y monitorear requests HTTP en tiempo real.
+
+```typescript
+import { createHttpClient, createDevOverlay } from "@bereasoftware/nexa";
+
+// Crear el Dev Overlay - aparece automáticamente
+const { tracker, ui } = createDevOverlay({
+  position: "bottom-right", // top-right, top-left, bottom-left
+  theme: "dark",
+  maxHistory: 200,
+});
+
+// Pasar el tracker al cliente HTTP
+const client = createHttpClient({
+  baseURL: "https://api.example.com",
+  devTracker: tracker,
+});
+
+// ¡Listo! Todas las requests aparecerán en el overlay
+const result = await client.get("/users");
+```
+
+### Características
+
+- **Toggle con teclado** — Presiona `Ctrl+Shift+N` (o `Cmd+Shift+N` en Mac) para mostrar/ocultar
+- **Lista de requests** — Muestra método, status, URL, duración y badges (cache, retries)
+- **Métricas en tiempo real** — Total requests, promedio, throughput,成功率, fallos
+- **Búsqueda y filtro** — Filtra por URL, método o status (`Ctrl+F`)
+- **Detalle de request** — Click en cualquier request para ver headers, body y timing
+- **Retry** — Reintenta requests directamente desde el overlay
+- **Keyboard shortcuts** — `Ctrl+Shift+N` (toggle), `Escape` (cerrar), `Ctrl+F` (buscar)
+
+### API
+
+```typescript
+createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevOverlayUI }
+```
+
+**Opciones de configuración:**
+
+| Opción | Tipo | Por defecto | Descripción |
+|--------|------|-------------|-------------|
+| `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'bottom-right'` | Posición del overlay |
+| `theme` | `'dark' \| 'light'` | `'dark'` | Tema visual |
+| `maxHistory` | `number` | `500` |Máximo de requests en historial |
+| `keyboardShortcut` | `string` | `'ctrl+shift+n'` | Atajo de teclado |
+
+**Métodos del UI:**
+
+```typescript
+ui.show()   // Mostrar overlay
+ui.hide()   // Ocultar overlay
+ui.toggle() // Alternar visibilidad
+
+tracker.clear() // Limpiar historial
+tracker.getHistory() // Obtener todos los requests
+tracker.getMetrics() // Obtener métricas
+```
+
+---
+
 ## Streaming
 
 Maneja archivos grandes y respuestas streaming:
@@ -1211,9 +1288,28 @@ npm run test:watch
 
 # Test coverage
 npm run test:coverage
+
+# UI de tests
+npm run test:ui
 ```
 
 Los tests usan **Vitest** (globals mode) con BDD style (`describe`/`it`/`expect`).
+
+### Linting y Formato
+
+```bash
+# Verificar tipo
+npm run lint
+
+# Corregir errores de estilo
+npm run lint:fix
+
+# Formatear código
+npm run format
+
+# Verificar formato
+npm run format:check
+```
 
 ### Build
 
@@ -1240,6 +1336,22 @@ dist/
   ├── nexa.iife.js      (19.6 KB, gzip: 6.68 KB)
   └── types/            (Tipo definitivo .d.ts)
 ```
+
+### Benchmark
+
+```bash
+# Ejecutar benchmark de performance
+npm run benchmark
+```
+
+### Ejemplos
+
+Ver la carpeta `examples/` para ejemplos de uso con diferentes frameworks:
+
+- `react-example.ts` — Uso con React
+- `vue-example.ts` — Uso con Vue
+- `svelte-example.ts` — Uso con Svelte
+- `node-example.ts` — Uso con Node.js
 
 ### Cobertura de Tests
 
