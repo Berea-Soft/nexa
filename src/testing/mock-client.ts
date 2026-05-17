@@ -16,7 +16,7 @@ export interface MockResponse {
   /** Response headers (default: { 'content-type': 'application/json' }) */
   headers?: Record<string, string>;
   /** Response body (will be JSON.stringified if object/array) */
-  data?: any;
+  data?: unknown;
   /** Optional delay in milliseconds before responding */
   delay?: number;
   /** Throw a network error instead of returning a response */
@@ -71,9 +71,9 @@ class RouteBuilder {
   /**
    * Configure a response for this route
    */
-  reply(status: number, data?: any, headers?: Record<string, string>): MockAdapter;
+  reply(status: number, data?: unknown, headers?: Record<string, string>): MockAdapter;
   reply(response: MockResponse): MockAdapter;
-  reply(arg1: number | MockResponse, data?: any, headers?: Record<string, string>): MockAdapter {
+  reply(arg1: number | MockResponse, data?: unknown, headers?: Record<string, string>): MockAdapter {
     let response: MockResponse;
     if (typeof arg1 === 'number') {
       response = { status: arg1, data, headers };
@@ -87,9 +87,9 @@ class RouteBuilder {
   /**
    * Configure a response that will only be used once
    */
-  replyOnce(status: number, data?: any, headers?: Record<string, string>): MockAdapter;
+  replyOnce(status: number, data?: unknown, headers?: Record<string, string>): MockAdapter;
   replyOnce(response: MockResponse): MockAdapter;
-  replyOnce(arg1: number | MockResponse, data?: any, headers?: Record<string, string>): MockAdapter {
+  replyOnce(arg1: number | MockResponse, data?: unknown, headers?: Record<string, string>): MockAdapter {
     let response: MockResponse;
     if (typeof arg1 === 'number') {
       response = { status: arg1, data, headers };
@@ -151,8 +151,8 @@ export class MockAdapter {
     
     // Try to extend the client with the mock adapter
     // We assume the client has an `extend` method (HttpClient does)
-    if (typeof (client as any).extend === 'function') {
-      this.mockClient = (client as any).extend({ adapter });
+    if (typeof (client as Record<string, unknown>).extend === 'function') {
+      this.mockClient = (client as Record<string, (config: { adapter: typeof adapter }) => unknown>).extend({ adapter });
     } else {
       // Fallback: create a new HttpClient with mock adapter
       // This requires importing HttpClient, but we want to avoid circular dependencies
@@ -181,7 +181,7 @@ export class MockAdapter {
       const method = init?.method || 'GET';
       const config: HttpRequestConfig = {
         url,
-        method: method as any,
+        method: method as HttpRequestConfig['method'],
         headers: init?.headers as Record<string, string>,
         body: init?.body,
         signal: init?.signal ?? undefined,
@@ -406,7 +406,7 @@ export class MockAdapter {
   /**
    * Helper to create a response configuration
    */
-  static reply(status: number, data?: any, headers?: Record<string, string>): MockResponse {
+  static reply(status: number, data?: unknown, headers?: Record<string, string>): MockResponse {
     return { status, data, headers };
   }
 

@@ -25,8 +25,8 @@ abstract class BaseRealtimeClient {
   protected pluginManager: PluginManager;
   protected status: 'connecting' | 'open' | 'closing' | 'closed' = 'closed';
   protected reconnectAttempt = 0;
-  protected reconnectTimer: any = null;
-  protected heartbeatTimer: any = null;
+  protected reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  protected heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   protected stats = {
     messagesSent: 0,
     messagesReceived: 0,
@@ -76,7 +76,7 @@ abstract class BaseRealtimeClient {
     if (event instanceof Error) {
       // Create a synthetic error event
       errorEvent = new Event('error');
-      (errorEvent as any).error = event;
+      (errorEvent as Record<string, unknown>).error = event;
     } else {
       errorEvent = event;
     }
@@ -155,7 +155,7 @@ abstract class BaseRealtimeClient {
   }
 
   protected startHeartbeat(): void {
-    if (!this.options.heartbeat) return;
+    if (!this.options.heartbeat) {return;}
 
     const interval = this.options.heartbeat.interval ?? 30000;
     const pingMessage = this.options.heartbeat.pingMessage ?? 'ping';
@@ -355,12 +355,13 @@ class NodeWebSocketClient extends BrowserWebSocketClient {
         // Security: Optional dependency 'ws' for Node.js WebSocket support
         // This is a dynamic import that only loads if the package is installed
         // @ts-ignore - optional dependency
-        const { default: _WebSocket } = await import('ws');
+        const { default: _ws } = await import('ws');
+        void _ws;
         // Override socket creation
         // Note: This is a simplified implementation
         // In a full implementation, we'd need to handle the WebSocket constructor differently
         return super.connect();
-      } catch (error) {
+      } catch {
         throw new Error(
           'WebSocket client for Node.js requires the "ws" package. Please install it: npm install ws'
         );

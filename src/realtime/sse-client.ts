@@ -26,7 +26,7 @@ class BrowserSSEClient implements ISSEClient {
   private pluginManager: PluginManager;
   private status: 'connecting' | 'open' | 'closing' | 'closed' = 'closed';
   private reconnectAttempt = 0;
-  private reconnectTimer: any = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private stats = {
     messagesSent: 0, // SSE is receive-only
     messagesReceived: 0,
@@ -189,8 +189,8 @@ class BrowserSSEClient implements ISSEClient {
     this.listeners.event.get(event)!.add(callback as (data: unknown) => void);
     
     // Also set up EventSource listener if connected
-    if (this._source && !(this._source as any)[`on${event}`]) {
-      this._source.addEventListener(event, (e: any) => {
+    if (this._source && !(this._source as Record<string, unknown>)[`on${event}`]) {
+      this._source.addEventListener(event, (e: MessageEvent) => {
         const messageEvent: RealtimeMessageEvent = {
           data: this.tryParseData(e.data),
           raw: e.data,
@@ -251,7 +251,7 @@ class BrowserSSEClient implements ISSEClient {
     if (event instanceof Error) {
       // Create a synthetic error event
       errorEvent = new Event('error');
-      (errorEvent as any).error = event;
+      (errorEvent as Record<string, unknown>).error = event;
     } else {
       errorEvent = event;
     }

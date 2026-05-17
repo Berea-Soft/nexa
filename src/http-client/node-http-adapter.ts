@@ -4,15 +4,18 @@
  */
 
 import type { NodeTransportOptions } from '../types/index.js';
+import type * as HttpModule from 'http';
+import type * as HttpsModule from 'https';
+import type * as Http2Module from 'http2';
 
 // Lazy load Node.js modules
-let http: typeof import('http') | undefined;
-let https: typeof import('https') | undefined;
-let http2: typeof import('http2') | undefined;
+let http: typeof HttpModule | undefined;
+let https: typeof HttpsModule | undefined;
+let http2: typeof Http2Module | undefined;
 
 // HTTP/2 Session Pool
 interface Http2SessionInfo {
-  session: import('http2').ClientHttp2Session;
+  session: Http2Module.ClientHttp2Session;
   lastUsed: number;
   requestCount: number;
   origin: string;
@@ -30,7 +33,7 @@ class Http2SessionPool {
   }
 
   private startCleanup() {
-    if (this.cleanupInterval) return;
+    if (this.cleanupInterval) {return;}
     this.cleanupInterval = setInterval(() => this.cleanup(), 10000); // Check every 10 seconds
   }
 
@@ -54,7 +57,7 @@ class Http2SessionPool {
     this.sessions.delete(info.origin);
   }
 
-  async getSession(origin: string, options?: NodeTransportOptions): Promise<import('http2').ClientHttp2Session> {
+  async getSession(origin: string, options?: NodeTransportOptions): Promise<Http2Module.ClientHttp2Session> {
     // Check for existing session
     let info = this.sessions.get(origin);
     
@@ -197,11 +200,11 @@ function extractRequestInfo(input: RequestInfo, init?: RequestInit): {
  */
 function createAgent(
   url: string,
-  http: typeof import('http'),
-  https: typeof import('https'),
+  http: typeof HttpModule,
+  https: typeof HttpsModule,
   options?: NodeTransportOptions,
   isHttp2: boolean = false
-): any {
+): unknown {
   if (isHttp2) {
     // HTTP/2 session management is more complex - for simplicity we don't pool here
     return null;
@@ -209,7 +212,7 @@ function createAgent(
   
   // For HTTP/1.1, create a custom agent
   const Agent = url.startsWith('https:') ? https.Agent : http.Agent;
-  const agentOptions: any = {
+  const agentOptions: Record<string, unknown> = {
     keepAlive: options?.keepAlive ?? true,
     maxSockets: options?.maxSockets ?? 50,
     maxFreeSockets: options?.maxFreeSockets ?? 10,
@@ -224,7 +227,7 @@ function createAgent(
 /**
  * Convert Node.js IncomingMessage to Fetch Response
  */
-async function createResponse(nodeRes: import('http').IncomingMessage): Promise<Response> {
+async function createResponse(nodeRes: HttpModule.IncomingMessage): Promise<Response> {
   const headers = new Headers();
   for (const [key, value] of Object.entries(nodeRes.headers)) {
     if (Array.isArray(value)) {
@@ -341,8 +344,8 @@ export async function nodeHttp2Adapter(
   const origin = parsedUrl.origin;
   
   return new Promise(async (resolve, reject) => {
-    let session: import('http2').ClientHttp2Session;
-    let req: import('http2').ClientHttp2Stream;
+    let session: Http2Module.ClientHttp2Session;
+    let req: Http2Module.ClientHttp2Stream;
     let released = false;
 
     const releaseSession = () => {
@@ -407,7 +410,7 @@ export async function nodeHttp2Adapter(
         const responseHeaders = new Headers();
         
         for (const [key, value] of Object.entries(headers)) {
-          if (key.startsWith(':')) continue;
+          if (key.startsWith(':')) {continue;}
           if (Array.isArray(value)) {
             value.forEach(v => responseHeaders.append(key, v));
           } else if (value !== undefined) {
