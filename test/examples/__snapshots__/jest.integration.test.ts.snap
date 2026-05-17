@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Nexa HTTP Client - Jest Integration Examples > Snapshot Testing > should match response snapshots 1`] = `
+{
+  "id": 1,
+  "name": "Test Item",
+  "nested": {
+    "value": "deep",
+  },
+}
+`;

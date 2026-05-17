@@ -1,207 +1,234 @@
-# Contributing
+# Contributing to Nexa
 
-Thank you for your interest in contributing to `@bereasoftware/nexa`! This document provides guidelines and instructions for contributing.
+**🇪🇸 Este documento está disponible en inglés. Si prefieres español, por favor solicítalo abriendo un issue.**  
+**🇬🇧 This document is available in English. If you prefer Spanish, please request it by opening an issue.**
+
+Thank you for your interest in contributing to Nexa! This document provides guidelines and instructions for contributing to the project.
 
 ## Code of Conduct
 
-This project follows our [Code of Conduct](CODE_OF_CONDUCT.md). Please read it before participating.
+Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 
 ## Getting Started
 
-### 1. Fork and Clone
+### Prerequisites
 
-```bash
-git clone https://github.com/YOUR_USERNAME/nexa.git
-cd nexa
-```
+- Node.js 20 or later
+- npm 10 or later
+- TypeScript 6.0 or later
 
-### 2. Install Dependencies
+### Development Setup
 
-```bash
-npm install
-```
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/nexa.git
+   cd nexa
+   ```
+3. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+4. **Create a branch** for your feature or fix:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
 
-### 3. Create a Branch
-
-```bash
-git checkout -b feat/your-feature-name
-# or
-git checkout -b fix/your-bug-fix
-```
-
-### 4. Make Changes
-
-Follow the conventions in [AGENTS.md](AGENTS.md) for code style and architecture guidelines.
-
-### 5. Run Tests
-
-```bash
-npm test              # Run all tests
-npm run test:coverage # Check coverage
-npm run lint          # Type check
-```
-
-### 6. Commit Changes
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
-
-```
-feat: add custom retry strategy
-fix: handle timeout error in polling
-docs: update API reference
-test: add edge case for cache TTL
-```
-
-### 7. Push and Create a Pull Request
-
-```bash
-git push origin feat/your-feature-name
-```
-
-Then open a PR on GitHub.
-
-## Pull Request Guidelines
-
-### Before Submitting
-
-- [ ] Tests pass (`npm test`)
-- [ ] Type check passes (`npm run lint`)
-- [ ] Coverage is maintained or improved
-- [ ] Documentation is updated (README.md, README.en.md)
-- [ ] Commit messages follow Conventional Commits
-
-### PR Description
-
-Include:
-
-1. **What** — Summary of changes
-2. **Why** — Motivation and context
-3. **How** — Implementation details (if non-obvious)
-4. **Testing** — How to verify the changes
-5. **Breaking Changes** — Any API changes
-
-### Review Process
-
-1. PR is reviewed by maintainers
-2. Feedback is provided (if needed)
-3. Changes are made and pushed
-4. PR is merged
-
-## What We're Looking For
-
-### Bug Fixes
-
-- Clear description of the bug
-- Reproduction steps
-- Test case that fails before fix
-- Test case that passes after fix
-
-### Features
-
-- Clear use case and motivation
-- Proposed API design
-- Implementation
-- Tests
-- Documentation updates
-
-### Documentation
-
-- Typos and grammar fixes
-- Clarification of existing docs
-- New examples and guides
-- Translations
-
-### Performance
-
-- Benchmark before/after
-- Clear explanation of improvement
-- No regression in functionality
-
-## Development Workflow
-
-### Project Structure
+## Project Structure
 
 ```
 src/
-├── http-client/      # Core HTTP client
-├── utils/            # Utility functions
-└── index.ts          # Entry point
-test/
-├── http-client.test.ts
-└── utils.test.ts
+├── http-client/         # HTTP client implementation
+│   ├── http-client.ts   # Main HTTP client class
+│   ├── node-http-adapter.ts # Node.js transport adapters
+│   └── index.ts         # Public exports
+├── realtime/            # Real-time communication (WebSocket/SSE)
+│   ├── websocket-client.ts
+│   ├── sse-client.ts
+│   ├── plugin.ts
+│   └── index.ts
+├── types/               # TypeScript type definitions
+│   └── index.ts
+├── utils/               # Utilities, middleware, plugin system
+│   └── index.ts
+├── testing/             # Testing utilities
+│   └── mock-client.ts
+└── index.ts             # Main entry point
 ```
 
-### Adding a New Feature
+## Development Workflow
 
-1. **Design** — Think about the API and how it fits with existing patterns
-2. **Implement** — Write the code following existing conventions
-3. **Test** — Add comprehensive tests
-4. **Document** — Update README.md and README.en.md
-5. **Review** — Self-review before submitting PR
+### Running Tests
 
-### Adding a New Export
+We use Vitest for testing. Run tests with:
 
-1. Export from the appropriate module file
-2. Re-export in `src/index.ts`
-3. Add to the exports verification test
-4. Document in README.md
+```bash
+# Run all tests
+npm test
 
-## Coding Standards
+# Run tests in watch mode
+npm run test:watch
 
-### TypeScript
+# Run tests with UI
+npm run test:ui
 
-- Strict mode enabled
-- No `any` — use `unknown` if necessary
-- Prefer `interface` over `type` for object shapes
-- Use generics for type-safe APIs
+# Run tests with coverage
+npm run test:coverage
+```
 
-### Testing
+### Type Checking
 
-- BDD style with `describe`/`it`/`expect`
-- Test both success and error paths
-- Use descriptive test names
-- Mock external dependencies
+```bash
+npm run lint
+```
 
-### Documentation
+### Building
 
-- Examples should be copy-paste runnable
-- Show both basic and advanced usage
-- Include error handling examples
-- Keep descriptions concise
+```bash
+npm run build
+```
 
-## Reporting Issues
+This will generate the following files in `dist/`:
+- `nexa.es.js` (ESM)
+- `nexa.cjs.js` (CommonJS)
+- `nexa.umd.js` (UMD)
+- `nexa.iife.js` (IIFE)
+- `types/` (TypeScript declarations)
 
-### Bug Reports
+## Making Changes
 
-Include:
-- Nexa version
-- Node.js version
-- Minimal reproduction
-- Expected vs actual behavior
+### Code Style Guidelines
 
-### Feature Requests
+1. **TypeScript**: Use strict TypeScript with explicit types
+2. **Imports**: Use ES module syntax (`import/export`)
+3. **Naming**:
+   - Interfaces: `IHttpClient`, `IRealtimeClient`
+   - Classes: `HttpClient`, `WebSocketClient`
+   - Functions: `createHttpClient`, `isHttpError`
+   - Variables: `camelCase`
+   - Constants: `UPPER_SNAKE_CASE`
+4. **Error Handling**: Use `Result<T, E>` monad pattern instead of exceptions
+5. **Documentation**: Add JSDoc comments for public APIs
 
-Include:
-- Use case
-- Proposed API
-- Alternatives considered
+### Adding New Features
 
-## Release Process
+1. **Check for existing issues** or create a new one to discuss the feature
+2. **Write tests** for your feature
+3. **Implement the feature** following the existing architecture
+4. **Update documentation** (README.md, examples, type definitions)
+5. **Ensure all tests pass** and linting succeeds
 
-This project uses [semantic-release](https://github.com/semantic-release/semantic-release) for automated versioning and publishing.
+### Fixing Bugs
 
-Commit messages determine the version bump:
+1. **Reproduce the bug** with a failing test
+2. **Fix the bug** and ensure the test passes
+3. **Add additional tests** for edge cases
 
-- `fix:` → PATCH bump
-- `feat:` → MINOR bump
-- `feat!:` or `BREAKING CHANGE:` → MAJOR bump
+### Adding Examples
 
-## Questions?
+Examples go in the `examples/` directory. Each example should:
+- Demonstrate a specific feature or use case
+- Be self-contained and runnable
+- Include comments explaining the code
 
-- Check [SUPPORT.md](SUPPORT.md) for help resources
-- Open a [GitHub Discussion](https://github.com/Berea-Soft/nexa/discussions)
-- Email: [johnandrade@bereasoft.com](mailto:johnandrade@bereasoft.com)
+## Pull Request Process
 
-## License
+1. **Ensure your code passes** all tests and linting
+2. **Update documentation** as needed
+3. **Write a clear PR description**:
+   - What changes were made
+   - Why they were made
+   - Any breaking changes
+   - Related issues
+4. **Use conventional commits** in your PR (see below)
+5. **Request review** from maintainers
 
-By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+### Commit Message Guidelines
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+
+Examples:
+```
+feat(http): add WebSocket client with auto-reconnection
+fix(cache): handle cache invalidation on POST requests
+docs: update README with new features
+```
+
+## Plugin Development
+
+Nexa has a plugin system. When creating plugins:
+
+1. **Extend the `Plugin` interface** from `src/utils/index.ts`
+2. **Register middleware** through the `PluginManager`
+3. **Emit events** for plugin communication
+4. **Add tests** for your plugin
+5. **Document** configuration options and usage
+
+Example plugin structure:
+```typescript
+export class MyPlugin implements Plugin {
+  name = 'my-plugin';
+  
+  setup(manager: PluginManager): void {
+    manager.addMiddleware(createMyMiddleware());
+    manager.on('some-event', this.handleEvent.bind(this));
+  }
+}
+```
+
+## Real-time Features
+
+When adding real-time features (WebSocket/SSE):
+- Follow the existing `IRealtimeClient` interface
+- Implement automatic reconnection
+- Add heartbeat support
+- Integrate with the plugin system
+- Support multiple environments (Browser, Node.js, Deno, Bun, Cloudflare)
+
+## Testing Guidelines
+
+- **Unit tests**: Test individual functions and classes
+- **Integration tests**: Test HTTP client with mock server
+- **Edge cases**: Test error conditions and boundary cases
+- **Performance**: Consider adding benchmarks for critical paths
+
+Use the existing mock client for HTTP testing:
+```typescript
+import { createMockClient } from '@bereasoftware/nexa/testing';
+
+const mockClient = createMockClient();
+mockClient.mockResponse('/api/users', { users: [] });
+```
+
+## Documentation
+
+- **README.md**: Primary documentation (Spanish)
+- **README.en.md**: English documentation
+- **JSDoc comments**: All public APIs
+- **Examples**: Practical usage examples
+- **Type definitions**: Self-documenting through TypeScript
+
+## Questions or Need Help?
+
+- **Open an issue** for bugs or feature requests
+- **Start a discussion** for questions about implementation
+- **Email**: johnandrade@bereasoft.com
+
+Thank you for contributing to Nexa! 🚀

@@ -1,3 +1,25 @@
+# [1.2.0](https://github.com/Berea-Soft/nexa/compare/v1.1.0...v1.2.0) (2026-04-20)
+
+
+### Features
+
+* enhance security measures by adding audits and dynamic imports for built-in modules ([f54c565](https://github.com/Berea-Soft/nexa/commit/f54c565a4484e58f34173e3891f0645b52fa5d71))
+
+# [1.1.0](https://github.com/Berea-Soft/nexa/compare/v1.0.5...v1.1.0) (2026-04-19)
+
+
+### Features
+
+* **tests:** enhance HTTP client tests with error context and retry logic ([c619308](https://github.com/Berea-Soft/nexa/commit/c619308dd78aa8399b1380e546a8340689f43006))
+* update package.json with additional metadata and improve Vite config for external dependencies ([2b9c8a3](https://github.com/Berea-Soft/nexa/commit/2b9c8a3e0c68a4cdf72d4018f660c3f2453a85cd))
+
+## [1.0.5](https://github.com/Berea-Soft/nexa/compare/v1.0.4...v1.0.5) (2026-04-02)
+
+
+### Bug Fixes
+
+* use OIDC for npm publishing ([83d9d8f](https://github.com/Berea-Soft/nexa/commit/83d9d8fc1b8c6afafa4c7438ef71c50e3aa916ad))
+
 ## [1.0.4](https://github.com/Berea-Soft/nexa/compare/v1.0.3...v1.0.4) (2026-04-02)
 
 
