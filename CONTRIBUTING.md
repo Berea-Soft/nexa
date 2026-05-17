@@ -22,7 +22,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) before particip
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/nexa.git
+   git clone https://github.com/Berea-Soft/nexa.git
    cd nexa
    ```
 3. **Install dependencies**:

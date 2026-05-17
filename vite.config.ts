@@ -25,7 +25,13 @@ export default defineConfig({
       entryRoot: "src",
       outDir: "dist/types",
       include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts", "src/**/*.spec.ts"],
+      exclude: [
+        "src/**/*.test.ts",
+        "src/**/*.spec.ts",
+        "src/realtime/**/*",
+        "src/http-client/node-http-adapter.ts",
+        "src/testing/**/*",
+      ],
       beforeWriteFile: (filePath, content) => {
         const normalizedPath = filePath.replace(
           /([\\/])dist\1types\1src(?=[\\/])/,

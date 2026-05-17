@@ -47,6 +47,7 @@ import type {
   PollOptions,
   Disposer,
   Result,
+  HttpTimeout,
   ProgressEvent as NexaProgressEvent,
   DevTracker,
 } from '../types'
@@ -231,6 +232,7 @@ export class HttpClient implements IHttpClient {
     maxConcurrent: number
     defaultResponseType: ResponseType
     defaultHooks: RequestHooks
+    adapter?: (input: RequestInfo, init?: RequestInit) => Promise<Response>
   }
   private requestQueue: RequestQueue | null
   private pendingRequests = new Set<AbortController>()
@@ -248,6 +250,7 @@ export class HttpClient implements IHttpClient {
       maxConcurrent: config.maxConcurrent ?? 0,
       defaultResponseType: config.defaultResponseType ?? 'auto',
       defaultHooks: config.defaultHooks ?? {},
+      adapter: config.adapter,
     }
     this.cache = this.config.cacheStrategy
     this.requestQueue =
@@ -349,7 +352,7 @@ export class HttpClient implements IHttpClient {
           const startTime = performance.now()
           const response = await this.fetchWithTimeout(
             finalRequest,
-            config.timeout ?? this.config.defaultTimeout,
+            this.resolveTimeoutMs(config.timeout ?? this.config.defaultTimeout),
             controller,
           )
           const duration = performance.now() - startTime
@@ -541,7 +544,9 @@ export class HttpClient implements IHttpClient {
     }
 
     const controller = new AbortController()
-    const timeoutMs = config.timeout ?? this.config.defaultTimeout
+    const timeoutMs = this.resolveTimeoutMs(
+      config.timeout ?? this.config.defaultTimeout,
+    )
 
     this.pendingRequests.add(controller)
 
@@ -802,6 +807,7 @@ export class HttpClient implements IHttpClient {
       defaultResponseType:
         overrides.defaultResponseType ?? this.config.defaultResponseType,
       defaultHooks: { ...this.config.defaultHooks, ...overrides.defaultHooks },
+      adapter: overrides.adapter,
     })
     // Inherit interceptors
     for (const interceptor of this.requestInterceptors) {
@@ -966,7 +972,9 @@ export class HttpClient implements IHttpClient {
         reject(new DOMException('Request timed out', 'TimeoutError'))
       }, timeoutMs)
 
-      fetch(request.url, {
+      const executeFetch = this.config.adapter ?? fetch
+
+      executeFetch(request.url, {
         method: request.method,
         headers,
         body: serialized,
@@ -1130,7 +1138,7 @@ export class HttpClient implements IHttpClient {
       return 1
     }
     if ('maxAttempts' in retry) {
-      return retry.maxAttempts
+      return retry.maxAttempts ?? 1
     }
     // RetryStrategy controls retries via shouldRetry; use safe upper bound
     return 100
@@ -1144,6 +1152,13 @@ export class HttpClient implements IHttpClient {
       return retry
     }
     return new ExponentialBackoffRetry(retry.maxAttempts, retry.backoffMs)
+  }
+
+  private resolveTimeoutMs(timeout: HttpTimeout): number {
+    if (typeof timeout === 'number') {
+      return timeout
+    }
+    return timeout.total ?? timeout.response ?? timeout.connection ?? 30000
   }
 
   private delay(ms: number): Promise<void> {
