@@ -379,10 +379,16 @@ export class DevOverlayUI {
   private selectedRequest: TrackedRequest | null = null
   private config: Required<DevOverlayConfig>
   private searchQuery = ''
+  private removeTrackerListener: (() => void) | null = null
+  private keyboardShortcutHandler: ((e: KeyboardEvent) => void) | null = null
+  private globalKeyboardHandler: ((e: KeyboardEvent) => void) | null = null
 
   constructor(tracker: RequestTracker) {
     this.tracker = tracker
     this.config = tracker.getConfig()
+    if (!this.canUseDOM()) {
+      return
+    }
     this.setupKeyboardShortcut()
     this.createPanel()
   }
@@ -394,7 +400,11 @@ export class DevOverlayUI {
     this.panel.style.display = 'flex'
     this.panel.style.opacity = '0'
     this.panel.style.transform = 'scale(0.96) translateY(8px)'
-    requestAnimationFrame(() => {
+    const animate =
+      typeof requestAnimationFrame === 'function'
+        ? requestAnimationFrame
+        : (callback: FrameRequestCallback) => setTimeout(callback, 0)
+    animate(() => {
       this.panel!.style.transition = 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
       this.panel!.style.opacity = '1'
       this.panel!.style.transform = 'scale(1) translateY(0)'
@@ -422,14 +432,26 @@ export class DevOverlayUI {
   }
 
   destroy(): void {
+    if (this.keyboardShortcutHandler) {
+      document.removeEventListener('keydown', this.keyboardShortcutHandler)
+      this.keyboardShortcutHandler = null
+    }
+    if (this.globalKeyboardHandler) {
+      document.removeEventListener('keydown', this.globalKeyboardHandler)
+      this.globalKeyboardHandler = null
+    }
+    this.removeTrackerListener?.()
+    this.removeTrackerListener = null
     this.panel?.remove()
     this.panel = null
+    this.visible = false
+    this.selectedRequest = null
   }
 
   private setupKeyboardShortcut(): void {
     const keys = this.config.keyboardShortcut.split('+')
     const requiredKeys = new Set(keys.map((k) => k.toLowerCase()))
-    document.addEventListener('keydown', (e) => {
+    this.keyboardShortcutHandler = (e: KeyboardEvent) => {
       const pressed = new Set<string>()
       if (e.ctrlKey) {
         pressed.add('ctrl')
@@ -461,10 +483,14 @@ export class DevOverlayUI {
         e.preventDefault()
         this.toggle()
       }
-    })
+    }
+    document.addEventListener('keydown', this.keyboardShortcutHandler)
   }
 
   private createPanel(): void {
+    if (!this.canUseDOM()) {
+      return
+    }
     this.panel = document.createElement('div')
     this.panel.id = 'nexa-dev-overlay'
 
@@ -489,8 +515,7 @@ export class DevOverlayUI {
       <div class="nexa-header">
 <div class="nexa-header-left">
           <div class="nexa-logo">
-            <img src="/src/assets/faviconNew.png" width="18" height="18" style="border-radius:4px;object-fit:contain;display:block;" alt="Nexa" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-            <span style="display:none;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#3b82f6,#238636);width:18px;height:18px;border-radius:4px;">N</span>
+            <span style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#3b82f6,#238636);width:18px;height:18px;border-radius:4px;">N</span>
           </div>
           <span class="nexa-title">Nexa DevTools</span>
         </div>
@@ -534,10 +559,10 @@ export class DevOverlayUI {
 
     document.body.appendChild(this.panel)
     this.bindEvents()
-    this.tracker.onChange(() => this.render())
+    this.removeTrackerListener = this.tracker.onChange(() => this.render())
     this.hide()
 
-    document.addEventListener('keydown', (e) => {
+    this.globalKeyboardHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && this.visible) {
         this.hide()
         return
@@ -554,7 +579,8 @@ export class DevOverlayUI {
         searchInput?.focus()
         searchInput?.select()
       }
-    })
+    }
+    document.addEventListener('keydown', this.globalKeyboardHandler)
   }
 
   private bindEvents(): void {
@@ -846,5 +872,13 @@ export class DevOverlayUI {
     } catch {
       return String(data)
     }
+  }
+
+  private canUseDOM(): boolean {
+    return (
+      typeof document !== 'undefined' &&
+      typeof document.createElement === 'function' &&
+      !!document.body
+    )
   }
 }
