@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/Berea-Soft/nexa/compare/v1.4.1...v1.5.0) (2026-05-18)
+
+
+### Features
+
+* enhance dev overlay with settings persistence and UI improvements ([941898f](https://github.com/Berea-Soft/nexa/commit/941898fc6b32bad88942b305fc6ff67387108719))
+
 ## [1.4.1](https://github.com/Berea-Soft/nexa/compare/v1.4.0...v1.4.1) (2026-05-18)
 
 # [1.4.0](https://github.com/Berea-Soft/nexa/compare/v1.3.0...v1.4.0) (2026-05-18)
