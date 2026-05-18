@@ -1,3 +1,18 @@
+# [1.3.0](https://github.com/Berea-Soft/nexa/compare/v1.2.0...v1.3.0) (2026-05-18)
+
+
+### Bug Fixes
+
+* consolidate pnpm setup steps in CI workflow for improved clarity ([ff0e98a](https://github.com/Berea-Soft/nexa/commit/ff0e98a222b4c640c3968903293354d3b5dfbeb3))
+* resolve merge conflicts keeping latest changes ([a6c3998](https://github.com/Berea-Soft/nexa/commit/a6c39983be180753aa0eb08f985444a2059f8dae))
+* update CI workflow to include pnpm setup and ensure proper caching ([0353348](https://github.com/Berea-Soft/nexa/commit/03533482d300f25ba3c00c93cc98d418fb57feca))
+* update CI workflow to use pnpm for dependency management and scripts ([f717863](https://github.com/Berea-Soft/nexa/commit/f717863a4094bddb261082b60dd14dc9e28f8806))
+
+
+### Features
+
+* enhance DevOverlayUI keyboard shortcuts and improve search functionality ([e8fee73](https://github.com/Berea-Soft/nexa/commit/e8fee737e980a136300348d2df24f84e2f4bf285))
+
 # [1.2.0](https://github.com/Berea-Soft/nexa/compare/v1.1.0...v1.2.0) (2026-04-20)
 
 
