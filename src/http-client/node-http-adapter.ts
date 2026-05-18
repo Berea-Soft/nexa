@@ -212,10 +212,10 @@ function createAgent(
   https: typeof HttpsModule,
   options?: NodeTransportOptions,
   isHttp2: boolean = false,
-): HttpModule.Agent | HttpsModule.Agent | null {
+): HttpModule.Agent | HttpsModule.Agent | undefined {
   if (isHttp2) {
     // HTTP/2 session management is more complex - for simplicity we don't pool here
-    return null
+    return undefined
   }
 
   // For HTTP/1.1, create a custom agent

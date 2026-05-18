@@ -1802,7 +1802,7 @@ describe('HTTP Client Plugin', () => {
       const { PluginManager, LoggerPlugin } = await import('../src/utils')
 
       const manager = new PluginManager()
-      const consoleSpy = vi.spyOn(console, 'warn')
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       manager.register(LoggerPlugin)
 
@@ -1822,7 +1822,7 @@ describe('HTTP Client Plugin', () => {
       const { PluginManager, LoggerPlugin } = await import('../src/utils')
 
       const manager = new PluginManager()
-      const consoleSpy = vi.spyOn(console, 'warn')
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       manager.register(LoggerPlugin)
 
@@ -1845,7 +1845,9 @@ describe('HTTP Client Plugin', () => {
       const { PluginManager, LoggerPlugin } = await import('../src/utils')
 
       const manager = new PluginManager()
-      const consoleErrorSpy = vi.spyOn(console, 'error')
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {})
 
       manager.register(LoggerPlugin)
 

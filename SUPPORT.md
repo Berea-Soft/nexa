@@ -98,7 +98,7 @@ A: The API is similar but uses Result instead of try/catch. Replace `try { const
 
 ### Q: Is Nexa production-ready?
 
-A: Yes. Nexa has 157 passing tests, 75.73% code coverage, and is used in production environments.
+A: Yes. Nexa currently has a substantial automated Vitest suite, and you can verify the latest status locally with `npm test` and `npm run test:coverage`.
 
 ### Q: How do I contribute?
 

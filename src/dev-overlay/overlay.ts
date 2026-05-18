@@ -434,6 +434,11 @@ export class DevOverlayUI {
       if (e.ctrlKey) {
         pressed.add('ctrl')
       }
+      if (e.metaKey) {
+        pressed.add('meta')
+        pressed.add('cmd')
+        pressed.add('ctrl')
+      }
       if (e.shiftKey) {
         pressed.add('shift')
       }
@@ -535,6 +540,19 @@ export class DevOverlayUI {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.visible) {
         this.hide()
+        return
+      }
+      if (
+        this.visible &&
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === 'f'
+      ) {
+        e.preventDefault()
+        const searchInput = this.panel?.querySelector(
+          '.nexa-search-input',
+        ) as HTMLInputElement | null
+        searchInput?.focus()
+        searchInput?.select()
       }
     })
   }

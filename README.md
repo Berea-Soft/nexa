@@ -7,8 +7,8 @@
 </p>
 
 <p align="center">
-  <a href="#tests"><img src="https://img.shields.io/badge/Tests-233_pasando-brightgreen?style=for-the-badge" alt="Tests" /></a>
-  <a href="#test-coverage"><img src="https://img.shields.io/badge/Coverage-72%25-orange?style=for-the-badge" alt="Coverage" /></a>
+  <a href="#tests"><img src="https://img.shields.io/badge/Tests-213_pasando-brightgreen?style=for-the-badge" alt="Tests" /></a>
+  <a href="#test-coverage"><img src="https://img.shields.io/badge/Coverage-Ver_reporte-orange?style=for-the-badge" alt="Coverage" /></a>
   <a href="https://www.npmjs.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/npm/v/@bereasoftware/nexa?style=for-the-badge" alt="NPM Version" /></a>
   <a href="https://bundlephobia.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/bundlephobia/minzip/@bereasoftware/nexa?label=Bundle&style=for-the-badge" alt="Bundle Size" /></a>
   <a href="https://www.npmjs.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/npm/dm/@bereasoftware/nexa?style=for-the-badge" alt="NPM Downloads" /></a>
@@ -60,17 +60,9 @@
 | Validadores y transformadores              |   ❌    |   ❌    |    ✅    |
 | Tracking de duración de respuesta          |   ❌    |   ❌    |    ✅    |
 | Detección inteligente de tipo de respuesta |   ❌    |   ✅    |    ✅    |
-| Transformación de requests (transformRequest)   |   ❌    |   ✅    |    ✅    |
-| Política de credenciales   |   ✅    |   ✅    |    ✅    |
-| Patrón adapter (mocking/testing)   |   ❌    |   ✅    |    ✅    |
-| Conversión automática a FormData   |   ❌    |   ❌    |    ✅    |
-| Contexto de error enriquecido (request/response/config)   |   ❌    |   ✅    |    ✅    |
-| Timeouts diferenciados (conexión vs respuesta)   |   ❌    |   ❌    |    ✅    |
-| Logging de debug (modo desarrollo)         |   ❌    |   ❌    |    ✅    |
 | WebSocket/SSE con reconexión automática    |   ❌    |   ❌    |    ✅    |
 | Rate limiting integrado                    |   ❌    |   ❌    |    ✅    |
 | Circuit breaker para fallos en cascada     |   ❌    |   ❌    |    ✅    |
-| Adaptadores multi-entorno (Node, Deno, Bun, Cloudflare) |   ❌    |   ❌    |    ✅    |
 | Tree-shakeable                             |   ✅    |   ❌    |    ✅    |
 | Dev Overlay (herramientas de desarrollo)   |   ❌    |   ❌    |    ✅    |
 
@@ -242,6 +234,8 @@ const client = createHttpClient({
 | `debug`               | `boolean \| 'verbose'`        | `undefined`                              | Habilita logging de debug para requests/responses. `true` para logs básicos, `'verbose'` para logs detallados. |
 | `logger`              | `(message: string, data?: unknown) => void` | `undefined`                              | Función de logging personalizada. Si se proporciona, reemplaza el console.log por defecto con logging personalizado. |
 
+**Nota:** Las opciones avanzadas `transformRequest`, `credentials`, `withCredentials`, `debug`, `logger`, `transport`, `nodeOptions` y `autoFormData` ya están tipadas, pero no todas están completamente integradas en el pipeline principal de `HttpClient` en esta versión. Úsalas con validación manual hasta que se cierre esa integración.
+
 ---
 
 ## Métodos HTTP
@@ -376,7 +370,7 @@ await client.post('/api', data, { withCredentials: true });
 
 // Configuración global
 const client = createHttpClient({
-  credentials: 'same-origin', // Por defecto: 'omit'
+  credentials: 'same-origin',
   // o
   withCredentials: true, // Equivalente a credentials: 'include'
 });
@@ -1323,13 +1317,13 @@ const result = await client.get("/users");
 
 ### Características
 
-- **Toggle con teclado** — Presiona `Ctrl+Shift+N` (o `Cmd+Shift+N` en Mac) para mostrar/ocultar
+- **Toggle con teclado** — Presiona `Ctrl+Shift+N` o `Cmd+Shift+N` para mostrar/ocultar
 - **Lista de requests** — Muestra método, status, URL, duración y badges (cache, retries)
-- **Métricas en tiempo real** — Total requests, promedio, throughput,成功率, fallos
+- **Métricas en tiempo real** — Total requests, promedio, throughput, éxitos y fallos
 - **Búsqueda y filtro** — Filtra por URL, método o status (`Ctrl+F`)
 - **Detalle de request** — Click en cualquier request para ver headers, body y timing
-- **Retry** — Reintenta requests directamente desde el overlay
-- **Keyboard shortcuts** — `Ctrl+Shift+N` (toggle), `Escape` (cerrar), `Ctrl+F` (buscar)
+- **Retry rápido** — Reejecuta la URL seleccionada con `fetch` para una verificación rápida
+- **Keyboard shortcuts** — `Ctrl+Shift+N` / `Cmd+Shift+N` (toggle), `Escape` (cerrar), `Ctrl+F` / `Cmd+F` (buscar)
 
 ### API
 
@@ -1341,10 +1335,17 @@ createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevO
 
 | Opción | Tipo | Por defecto | Descripción |
 |--------|------|-------------|-------------|
+| `enabled` | `boolean` | `true` | Flag de configuración almacenado por el tracker para habilitar o deshabilitar el overlay desde tu flujo |
 | `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'bottom-right'` | Posición del overlay |
-| `theme` | `'dark' \| 'light'` | `'dark'` | Tema visual |
+| `theme` | `'dark' \| 'light'` | `'dark'` | Tema visual tipado; la UI actual está optimizada para el tema oscuro |
 | `maxHistory` | `number` | `500` |Máximo de requests en historial |
 | `keyboardShortcut` | `string` | `'ctrl+shift+n'` | Atajo de teclado |
+
+**Notas de comportamiento:**
+
+- `createDevOverlay()` es singleton. Si lo llamas varias veces, reutiliza la misma instancia.
+- `theme` está tipado como `'dark' | 'light'`, pero la UI actual está diseñada principalmente para tema oscuro.
+- El botón de retry del panel usa `fetch()` directo para revalidación rápida; no reaplica automáticamente interceptores ni configuración avanzada del `HttpClient`.
 
 **Métodos del UI:**
 
@@ -1352,10 +1353,52 @@ createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevO
 ui.show()   // Mostrar overlay
 ui.hide()   // Ocultar overlay
 ui.toggle() // Alternar visibilidad
+ui.destroy() // Desmontar el panel del DOM
 
 tracker.clear() // Limpiar historial
 tracker.getHistory() // Obtener todos los requests
 tracker.getMetrics() // Obtener métricas
+tracker.getConfig() // Obtener configuración resuelta
+tracker.onChange((request) => {}) // Escuchar nuevos requests
+```
+
+**Métodos del módulo:**
+
+```typescript
+getDevOverlay() // Obtener { tracker, ui } actuales o null si no existen
+destroyDevOverlay() // Destruir la instancia singleton actual
+```
+
+**Estructuras expuestas:**
+
+```typescript
+type TrackedRequest = {
+  id: string;
+  method: string;
+  url: string;
+  status?: number;
+  duration: number;
+  timestamp: number;
+  cached: boolean;
+  ok: boolean;
+  code?: string;
+  headers: Record<string, string>;
+  body?: unknown;
+  responseHeaders?: Record<string, string>;
+  retryCount: number;
+};
+
+type DevMetrics = {
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  cachedRequests: number;
+  avgDuration: number;
+  maxDuration: number;
+  minDuration: number;
+  requestsPerSecond: number;
+  slowestRequests: TrackedRequest[];
+};
 ```
 
 ---
@@ -1510,7 +1553,7 @@ deferred.reject(new Error("falló"));
 
 ### Contexto de Error Enriquecido
 
-Nexa proporciona contexto de error enriquecido similar a axios, incluyendo la request original, response y configuración en los objetos de error. Esto facilita el debugging.
+`HttpErrorDetails` incluye campos opcionales para `request`, `response` y `config`, pero en esta versión no todos los caminos de error los rellenan de forma consistente. Úsalos como metadatos opcionales, no como garantía fuerte.
 
 ```typescript
 const result = await client.get('/api');
@@ -1522,7 +1565,7 @@ if (!result.ok) {
 }
 ```
 
-Todos los errores ahora incluyen propiedades `request`, `response` (si está disponible), y `config`.
+Si necesitas ese contexto en todos los errores, conviene complementarlo temporalmente con hooks o interceptores propios.
 
 ### Clase HttpError
 

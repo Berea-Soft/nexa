@@ -1,4 +1,5 @@
-import { createHttpClient, createDevOverlay } from '../src';
+import { createHttpClient } from '../src/http-client/http-client';
+import { createDevOverlay } from '../src/dev-overlay';
 
 const { tracker, ui } = createDevOverlay({
   position: 'bottom-right',

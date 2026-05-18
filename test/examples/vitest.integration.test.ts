@@ -234,8 +234,6 @@ describe('Nexa HTTP Client - Vitest Integration Examples', () => {
           backoffMs: 0, // No delay for testing
         },
       })
-      console.log('Result error:', result.ok ? 'success' : result.error)
-
       // Assert
       expect(callCount).toBe(1) // Should have succeeded on second attempt (first was 500 error)
       expect(result.ok).toBe(true)

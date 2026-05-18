@@ -7,8 +7,8 @@
 </p>
 
 <p align="center">
-  <a href="#tests"><img src="https://img.shields.io/badge/Tests-157_passing-brightgreen?style=for-the-badge" alt="Tests" /></a>
-  <a href="#test-coverage"><img src="https://img.shields.io/badge/Coverage-75.73%25-orange?style=for-the-badge" alt="Coverage" /></a>
+  <a href="#tests"><img src="https://img.shields.io/badge/Tests-213_passing-brightgreen?style=for-the-badge" alt="Tests" /></a>
+  <a href="#test-coverage"><img src="https://img.shields.io/badge/Coverage-See_report-orange?style=for-the-badge" alt="Coverage" /></a>
   <a href="https://www.npmjs.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/npm/v/@bereasoftware/nexa?style=for-the-badge" alt="NPM Version" /></a>
   <a href="https://bundlephobia.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/bundlephobia/minzip/@bereasoftware/nexa?label=Bundle&style=for-the-badge" alt="Bundle Size" /></a>
   <a href="https://www.npmjs.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/npm/dm/@bereasoftware/nexa?style=for-the-badge" alt="NPM Downloads" /></a>
@@ -980,13 +980,13 @@ const result = await client.get("/users");
 
 ### Features
 
-- **Keyboard toggle** — Press `Ctrl+Shift+N` (or `Cmd+Shift+N` on Mac) to show/hide
+- **Keyboard toggle** — Press `Ctrl+Shift+N` or `Cmd+Shift+N` to show/hide
 - **Request list** — Shows method, status, URL, duration and badges (cache, retries)
 - **Real-time metrics** — Total requests, average, throughput, success, failed
 - **Search and filter** — Filter by URL, method or status (`Ctrl+F`)
 - **Request detail** — Click any request to see headers, body and timing
-- **Retry** — Retry requests directly from the overlay
-- **Keyboard shortcuts** — `Ctrl+Shift+N` (toggle), `Escape` (close), `Ctrl+F` (search)
+- **Quick retry** — Replays the selected URL with `fetch` for fast verification
+- **Keyboard shortcuts** — `Ctrl+Shift+N` / `Cmd+Shift+N` (toggle), `Escape` (close), `Ctrl+F` / `Cmd+F` (search)
 
 ### API
 
@@ -998,10 +998,19 @@ createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevO
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Tracker-level flag you can use to enable or disable the overlay flow in your app |
 | `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'bottom-right'` | Overlay position |
-| `theme` | `'dark' \| 'light'` | `'dark'` | Visual theme |
+| `theme` | `'dark' \| 'light'` | `'dark'` | Typed visual theme; the current UI is optimized for dark mode |
 | `maxHistory` | `number` | `500` | Maximum requests in history |
 | `keyboardShortcut` | `string` | `'ctrl+shift+n'` | Keyboard shortcut |
+
+**Behavior notes:**
+
+- `createDevOverlay()` is a singleton. Multiple calls reuse the same instance.
+- `theme` is typed as `'dark' | 'light'`, but the current UI is primarily designed for dark mode.
+- The retry button uses direct `fetch()` for quick revalidation; it does not automatically replay interceptors or advanced `HttpClient` configuration.
+
+**Note:** Advanced request options such as `transformRequest`, `credentials`, `withCredentials`, `debug`, `logger`, `transport`, `nodeOptions`, and `autoFormData` are already typed, but not all of them are fully wired into the main `HttpClient` pipeline in this release.
 
 **UI methods:**
 
@@ -1009,10 +1018,52 @@ createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevO
 ui.show()   // Show overlay
 ui.hide()    // Hide overlay
 ui.toggle()  // Toggle visibility
+ui.destroy() // Remove the panel from the DOM
 
 tracker.clear()          // Clear history
 tracker.getHistory()      // Get all requests
 tracker.getMetrics()      // Get metrics
+tracker.getConfig()       // Get resolved config
+tracker.onChange((request) => {}) // Listen for new tracked requests
+```
+
+**Module methods:**
+
+```typescript
+getDevOverlay() // Get current { tracker, ui } or null if not created yet
+destroyDevOverlay() // Destroy the current singleton instance
+```
+
+**Exposed data shapes:**
+
+```typescript
+type TrackedRequest = {
+  id: string;
+  method: string;
+  url: string;
+  status?: number;
+  duration: number;
+  timestamp: number;
+  cached: boolean;
+  ok: boolean;
+  code?: string;
+  headers: Record<string, string>;
+  body?: unknown;
+  responseHeaders?: Record<string, string>;
+  retryCount: number;
+};
+
+type DevMetrics = {
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  cachedRequests: number;
+  avgDuration: number;
+  maxDuration: number;
+  minDuration: number;
+  requestsPerSecond: number;
+  slowestRequests: TrackedRequest[];
+};
 ```
 
 ---
@@ -1276,8 +1327,6 @@ Nexa ships in multiple module formats:
 
 ### Tests
 
-**157 tests in total**: 88 HTTP Client tests + 69 utilities tests
-
 ```bash
 # Run all tests
 npm test
@@ -1354,44 +1403,13 @@ See the `examples/` folder for usage examples with different frameworks:
 
 ### Test Coverage
 
-**Overall Coverage: 75.73%** — solid unit test coverage with mock-based HTTP testing
+Generate the latest report locally:
 
-| Component   | Coverage   | Details                           |
-| ----------- | ---------- | --------------------------------- |
-| HTTP Client | **80.85%** | 81.25% branches, 73.43% functions |
-| Types       | **100%**   | Perfect type coverage             |
-| Utils       | **71.79%** | 66.66% branches, 81.14% functions |
+```bash
+npm run test:coverage
+```
 
-**HTTP Client** (`test/http-client.test.ts`) — **88 tests**:
-
-- ✓ Core methods: create, GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS (7 tests)
-- ✓ Retry strategies & timeouts (3 tests)
-- ✓ Interceptors & disposal (5 tests)
-- ✓ Caching & validation (4 tests)
-- ✓ Type safety & extensions (3 tests)
-- ✓ Pagination & polling (5 tests)
-- ✓ Response type handling: all 8+ types + auto-detection (13 tests)
-- ✓ Binary content-type detection: image/_, audio/_, video/\*, octet-stream (5 tests)
-- ✓ Body serialization: JSON, null, strings, Blob, URLSearchParams, ArrayBuffer, TypedArray, FormData, ReadableStream (7 tests)
-- ✓ Error normalization: TimeoutError, AbortError, TypeError, unknown, NETWORK_ERROR (5+ tests)
-- ✓ Request management: activeRequests, cancelAll, clearCache (2 tests)
-- ✓ Module exports verification: all 8 export categories (8 tests)
-- ✓ Plugin integration: LoggerPlugin, MetricsPlugin event handlers (7 tests)
-- ✓ Advanced configuration: null body, direct Blob, abort messages (5+ tests)
-
-**Utilities** (`test/utils.test.ts`) \u2014 **69 tests**:
-
-- \u2713 Validators: schema, required fields, type checks (4 tests)
-- \u2713 Transformers: snake↔camel case, flatten, projection, wrapper (5 tests)
-- \u2713 Retry Strategies: Aggressive, Conservative, Circuit Breaker (10 tests)
-- \u2713 Timeout & Retry: withTimeout, retry function (6 tests)
-- \u2713 Cache: CacheStore CRUD, TTL expiry (5 tests)
-- \u2713 Deduplication: RequestDeduplicator sharing, cleanup (3 tests)
-- \u2713 Middleware Pipeline: ordering, next() guard, legacy pipeline (3 tests)
-- \u2713 Cache Middleware: GET caching, POST bypass (2 tests)
-- \u2713 Dedup Middleware: GET dedup, POST bypass (2 tests)
-- \u2713 Typed Generics: TypedResponse, TypedObservable (map/filter), Defer, type guards, branded types (9 tests)
-- \u2713 Plugins: PluginManager, LoggerPlugin, MetricsPlugin, CachePlugin, DedupePlugin (5 tests)\n\n### Coverage Limitations & Realistic Ceiling\n\nUnit test coverage plateaus around **75-80%** due to inherent mock-based testing limitations:\n\n**Why not 95%?**\n- **Streaming features** (~3-5% gap): Download progress tracking uses `ReadableStream.getReader()` which requires real HTTP streams—not mockable with `fetch-mock`\n- **Utility examples** (~5-10% gap): Middleware patterns and reference code are intentionally not exercised in production \n- **Export-only files** (~2-3% gap): `http-client/index.ts` verified via import validation, not unit testable\n\n**Realistic maximums:**\n- Unit tests + mocks: **~80-85%** ceiling (current: 75.73%)\n- Integration tests required: Would reach 90%+ but beyond this project\u2019s scope\n\nThe 75.73% coverage represents comprehensive testing of all **production code paths** that can be reached via HTTP mocks.
+Coverage changes as features evolve, so the generated report should be treated as the source of truth instead of hardcoded percentages in the README.
 
 ---
 

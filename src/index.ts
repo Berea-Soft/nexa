@@ -4,6 +4,7 @@
  */
 
 export * from './http-client'
+export * from './realtime'
 export * from './types'
 export * from './utils'
 export {

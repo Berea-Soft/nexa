@@ -2,6 +2,21 @@
 
 This guide helps you migrate from other HTTP clients to `@bereasoftware/nexa`.
 
+## Package Manager
+
+The project standard is `pnpm`. For new integrations and local verification, prefer:
+
+```bash
+pnpm add @bereasoftware/nexa
+```
+
+If you are migrating from axios, a common first step is:
+
+```bash
+pnpm remove axios
+pnpm add @bereasoftware/nexa
+```
+
 ## From `fetch`
 
 ### Basic GET Request
@@ -239,6 +254,8 @@ const result = await client.post('/upload', formData);
 
 ## Migration Checklist
 
+- [ ] Install Nexa with `pnpm add @bereasoftware/nexa`
+- [ ] Remove legacy client dependencies you no longer use (for example `pnpm remove axios`)
 - [ ] Replace `axios` imports with `createHttpClient`
 - [ ] Convert try/catch blocks to Result pattern
 - [ ] Replace `axios.create()` with `createHttpClient()`
@@ -247,4 +264,5 @@ const result = await client.post('/upload', formData);
 - [ ] Update response access: `response.data` → `result.value.data`
 - [ ] Update error access: `error.response?.status` → `result.error.status`
 - [ ] Test all API calls after migration
+- [ ] Verify the integration locally with `pnpm test` and `pnpm build`
 - [ ] Update TypeScript types if needed

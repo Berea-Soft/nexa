@@ -7,6 +7,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import {
   nodeHttpAdapter,
   nodeHttp2Adapter,
+  closeHttp2SessionPool,
 } from '../src/http-client/node-http-adapter.js'
 import type { NodeTransportOptions } from '../src/types/index.js'
 
@@ -130,10 +131,68 @@ runNodeTests('Node.js HTTP Adapters', () => {
   })
 
   describe('nodeHttp2Adapter', () => {
-    it.skip('should make HTTP/2 requests', async () => {
-      // HTTP/2 plaintext server requires Node.js with http2.createServer support
-      // and proper configuration. Skipping for now as it's complex to set up.
-      expect(true).toBe(true)
+    let server: import('http2').Http2Server
+    let port: number
+    let baseUrl: string
+
+    beforeAll(async () => {
+      const http2 = await import('http2')
+      return new Promise<void>((resolve) => {
+        server = http2.createServer()
+
+        server.on('stream', (stream, headers) => {
+          const path = headers[':path']
+          const method = headers[':method']
+
+          if (path === '/json' && method === 'GET') {
+            stream.respond({
+              ':status': 200,
+              'content-type': 'application/json',
+            })
+            stream.end(JSON.stringify({ success: true, protocol: 'h2' }))
+            return
+          }
+
+          stream.respond({
+            ':status': 404,
+            'content-type': 'application/json',
+          })
+          stream.end(JSON.stringify({ error: 'Not Found' }))
+        })
+
+        server.listen(0, () => {
+          const address = server.address()
+          if (address && typeof address === 'object') {
+            port = address.port
+          } else {
+            port = 0
+          }
+          baseUrl = `http://localhost:${port}`
+          resolve()
+        })
+      })
+    })
+
+    afterAll(() => {
+      closeHttp2SessionPool()
+      return new Promise<void>((resolve) => {
+        if (server) {
+          server.close(() => resolve())
+        } else {
+          resolve()
+        }
+      })
+    })
+
+    it('should make HTTP/2 requests', async () => {
+      const response = await nodeHttp2Adapter(`${baseUrl}/json`, {
+        method: 'GET',
+      })
+
+      expect(response.status).toBe(200)
+      expect(response.ok).toBe(true)
+      const data = await response.json()
+      expect(data).toEqual({ success: true, protocol: 'h2' })
     })
   })
 })

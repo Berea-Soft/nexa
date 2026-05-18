@@ -100,12 +100,6 @@ const client = createHttpClient({
   
   // Set reasonable timeouts
   defaultTimeout: 30000,
-  
-  // Enable debug only in development
-  debug: process.env.NODE_ENV === 'development',
-  
-  // Use secure credentials handling
-  credentials: 'same-origin',
 });
 ```
 

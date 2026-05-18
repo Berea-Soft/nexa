@@ -24,4 +24,5 @@ dist-ssr
 *.sw?
 coverage/*
 .examples/*
+.pnpm-store/*
 LINKEDIN_POST.md

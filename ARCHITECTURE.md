@@ -236,8 +236,8 @@ Visual development tool integrated into the HTTP client for debugging and monito
 - Metrics: total requests, avg duration, throughput, success/fail rates
 - Search/filter by URL, method, or status
 - Request detail view with headers and body
-- Retry functionality from the overlay
-- Keyboard shortcuts: `Ctrl+Shift+N` (toggle), `Escape` (close)
+- Quick retry via direct `fetch()` from the overlay
+- Keyboard shortcuts: `Ctrl+Shift+N` / `Cmd+Shift+N` (toggle), `Escape` (close), `Ctrl+F` / `Cmd+F` (search)
 
 **Integration:**
 ```typescript
@@ -245,4 +245,4 @@ const { tracker, ui } = createDevOverlay(config);
 const client = createHttpClient({ devTracker: tracker });
 ```
 
-The Dev Overlay is tree-shakeable — if you don't import `createDevOverlay`, it won't be included in your bundle.
+The Dev Overlay is tree-shakeable — if you don't import `createDevOverlay`, it won't be included in your bundle. The current UI is optimized for dark mode and `createDevOverlay()` behaves as a singleton.
