@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/Berea-Soft/nexa/compare/v1.3.0...v1.4.0) (2026-05-18)
+
+
+### Features
+
+* **dev-overlay:** implement keyboard shortcuts and improve cleanup on destroy ([7239685](https://github.com/Berea-Soft/nexa/commit/72396858439ccd44a541d4793da97518d671bb69))
+
 # [1.3.0](https://github.com/Berea-Soft/nexa/compare/v1.2.0...v1.3.0) (2026-05-18)
 
 
