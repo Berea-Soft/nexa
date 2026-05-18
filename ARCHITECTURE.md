@@ -246,3 +246,8 @@ const client = createHttpClient({ devTracker: tracker });
 ```
 
 The Dev Overlay is tree-shakeable — if you don't import `createDevOverlay`, it won't be included in your bundle. The current UI is optimized for dark mode and `createDevOverlay()` behaves as a singleton.
+
+**Support level:**
+- Public API intended for browser development workflows
+- Safe to import in SSR/Node environments
+- UI mounting requires DOM availability

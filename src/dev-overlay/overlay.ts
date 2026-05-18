@@ -2,6 +2,9 @@ import type { TrackedRequest, DevOverlayConfig } from './types'
 import type { RequestTracker } from './tracker'
 
 const ICONS = {
+  gear: `<svg width="16" height="16" viewBox="0 0 48 48" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+<path d="M 24 4 C 22.423103 4 20.902664 4.1994284 19.451172 4.5371094 A 1.50015 1.50015 0 0 0 18.300781 5.8359375 L 17.982422 8.7382812 C 17.878304 9.6893592 17.328913 10.530853 16.5 11.009766 C 15.672739 11.487724 14.66862 11.540667 13.792969 11.15625 L 13.791016 11.15625 L 11.125 9.9824219 A 1.50015 1.50015 0 0 0 9.4257812 10.330078 C 7.3532865 12.539588 5.7626807 15.215064 4.859375 18.201172 A 1.50015 1.50015 0 0 0 5.4082031 19.845703 L 7.7734375 21.580078 C 8.5457929 22.147918 9 23.042801 9 24 C 9 24.95771 8.5458041 25.853342 7.7734375 26.419922 L 5.4082031 28.152344 A 1.50015 1.50015 0 0 0 4.859375 29.796875 C 5.7625845 32.782665 7.3519262 35.460112 9.4257812 37.669922 A 1.50015 1.50015 0 0 0 11.125 38.015625 L 13.791016 36.841797 C 14.667094 36.456509 15.672169 36.511947 16.5 36.990234 C 17.328913 37.469147 17.878304 38.310641 17.982422 39.261719 L 18.300781 42.164062 A 1.50015 1.50015 0 0 0 19.449219 43.460938 C 20.901371 43.799844 22.423103 44 24 44 C 25.576897 44 27.097336 43.800572 28.548828 43.462891 A 1.50015 1.50015 0 0 0 29.699219 42.164062 L 30.017578 39.261719 C 30.121696 38.310641 30.671087 37.469147 31.5 36.990234 C 32.327261 36.512276 33.33138 36.45738 34.207031 36.841797 L 36.875 38.015625 A 1.50015 1.50015 0 0 0 38.574219 37.669922 C 40.646713 35.460412 42.237319 32.782983 43.140625 29.796875 A 1.50015 1.50015 0 0 0 42.591797 28.152344 L 40.226562 26.419922 C 39.454197 25.853342 39 24.95771 39 24 C 39 23.04229 39.454197 22.146658 40.226562 21.580078 L 42.591797 19.847656 A 1.50015 1.50015 0 0 0 43.140625 18.203125 C 42.237319 15.217017 40.646713 12.539588 38.574219 10.330078 A 1.50015 1.50015 0 0 0 36.875 9.984375 L 34.207031 11.158203 C 33.33138 11.54262 32.327261 11.487724 31.5 11.009766 C 30.671087 10.530853 30.121696 9.6893592 30.017578 8.7382812 L 29.699219 5.8359375 A 1.50015 1.50015 0 0 0 28.550781 4.5390625 C 27.098629 4.2001555 25.576897 4 24 4 z M 24 7 C 24.974302 7 25.90992 7.1748796 26.847656 7.3398438 L 27.035156 9.0644531 C 27.243038 10.963375 28.346913 12.652335 30 13.607422 C 31.654169 14.563134 33.668094 14.673009 35.416016 13.904297 L 37.001953 13.207031 C 38.219788 14.669402 39.183985 16.321182 39.857422 18.130859 L 38.451172 19.162109 C 36.911538 20.291529 36 22.08971 36 24 C 36 25.91029 36.911538 27.708471 38.451172 28.837891 L 39.857422 29.869141 C 39.183985 31.678818 38.219788 33.330598 37.001953 34.792969 L 35.416016 34.095703 C 33.668094 33.326991 31.654169 33.436866 30 34.392578 C 28.346913 35.347665 27.243038 37.036625 27.035156 38.935547 L 26.847656 40.660156 C 25.910002 40.82466 24.973817 41 24 41 C 23.025698 41 22.09008 40.82512 21.152344 40.660156 L 20.964844 38.935547 C 20.756962 37.036625 19.653087 35.347665 18 34.392578 C 16.345831 33.436866 14.331906 33.326991 12.583984 34.095703 L 10.998047 34.792969 C 9.7799772 33.330806 8.8159425 31.678964 8.1425781 29.869141 L 9.5488281 28.837891 C 11.088462 27.708471 12 25.91029 12 24 C 12 22.08971 11.087719 20.290363 9.5488281 19.160156 L 8.1425781 18.128906 C 8.8163325 16.318532 9.7814501 14.667839 11 13.205078 L 12.583984 13.902344 C 14.331906 14.671056 16.345831 14.563134 18 13.607422 C 19.653087 12.652335 20.756962 10.963375 20.964844 9.0644531 L 21.152344 7.3398438 C 22.089998 7.1753403 23.026183 7 24 7 z M 24 16 C 19.599487 16 16 19.59949 16 24 C 16 28.40051 19.599487 32 24 32 C 28.400513 32 32 28.40051 32 24 C 32 19.59949 28.400513 16 24 16 z M 24 19 C 26.779194 19 29 21.220808 29 24 C 29 26.779192 26.779194 29 24 29 C 21.220806 29 19 26.779192 19 24 C 19 21.220808 21.220806 19 24 19 z"></path>
+</svg>`,
   close: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
   chevron: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`,
   back: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`,
@@ -13,25 +16,30 @@ const ICONS = {
 }
 
 const COLORS = {
-  bg: '#09090b',
-  bgElevated: '#18181b',
-  border: '#27272a',
-  borderFocus: '#3f3f46',
-  text: '#fafafa',
-  textMuted: '#a1a1aa',
-  textDim: '#71717a',
-  accent: '#3b82f6',
-  accentHover: '#2563eb',
-  success: '#22c55e',
-  successBg: 'rgba(34, 197, 94, 0.1)',
-  error: '#ef4444',
-  errorBg: 'rgba(239, 68, 68, 0.1)',
-  warning: '#f59e0b',
-  get: '#22c55e',
-  post: '#3b82f6',
-  put: '#f59e0b',
-  patch: '#a855f7',
-  delete: '#ef4444',
+  bg: '#0b1120',
+  bgElevated: '#111827',
+  bgSurface: '#172033',
+  border: '#24324a',
+  borderFocus: '#35507a',
+  text: '#e5eefb',
+  textMuted: '#b4c4dd',
+  textDim: '#7f93b3',
+  accent: '#38bdf8',
+  accentHover: '#0ea5e9',
+  accentSoft: 'rgba(56, 189, 248, 0.18)',
+  success: '#34d399',
+  successBg: 'rgba(52, 211, 153, 0.16)',
+  error: '#fb7185',
+  errorBg: 'rgba(251, 113, 133, 0.16)',
+  warning: '#fbbf24',
+  warningBg: 'rgba(251, 191, 36, 0.16)',
+  info: '#a78bfa',
+  infoBg: 'rgba(167, 139, 250, 0.16)',
+  get: '#34d399',
+  post: '#38bdf8',
+  put: '#fbbf24',
+  patch: '#a78bfa',
+  delete: '#fb7185',
 }
 
 const STYLES = `
@@ -42,7 +50,7 @@ const STYLES = `
     color: ${COLORS.text};
     border: 1px solid ${COLORS.border};
     border-radius: 16px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.03);
+    box-shadow: 0 28px 60px -24px rgba(2, 6, 23, 0.78), 0 0 0 1px rgba(148, 163, 184, 0.08);
     overflow: hidden;
   }
   #nexa-dev-overlay .nexa-header {
@@ -64,7 +72,7 @@ const STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    background: ${COLORS.bgElevated};
+    background: linear-gradient(135deg, ${COLORS.accentSoft}, rgba(255,255,255,0.02));
     border-radius: 8px;
     overflow: hidden;
   }
@@ -91,7 +99,7 @@ const STYLES = `
     transition: all 0.15s;
   }
   #nexa-dev-overlay .nexa-icon-btn:hover {
-    background: ${COLORS.border};
+    background: ${COLORS.bgSurface};
     color: ${COLORS.text};
   }
   #nexa-dev-overlay .nexa-metrics-bar {
@@ -108,12 +116,12 @@ const STYLES = `
     align-items: center;
     gap: 2px;
     padding: 8px 12px;
-    background: ${COLORS.bgElevated};
+    background: ${COLORS.bgSurface};
     border-radius: 10px;
     transition: all 0.2s;
   }
   #nexa-dev-overlay .nexa-metric:hover {
-    background: ${COLORS.border};
+    background: rgba(53, 80, 122, 0.3);
   }
   #nexa-dev-overlay .nexa-metric-value {
     font-size: 18px;
@@ -154,7 +162,7 @@ const STYLES = `
   }
   #nexa-dev-overlay .nexa-search-input:focus {
     border-color: ${COLORS.accent};
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 3px ${COLORS.accentSoft};
   }
   #nexa-dev-overlay .nexa-search-input::placeholder { color: ${COLORS.textDim}; }
   #nexa-dev-overlay .nexa-tabs {
@@ -182,7 +190,7 @@ const STYLES = `
   #nexa-dev-overlay .nexa-tab-count {
     font-size: 11px;
     padding: 2px 6px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(148, 163, 184, 0.14);
     border-radius: 10px;
   }
   #nexa-dev-overlay .nexa-body { flex: 1; overflow: hidden; display: flex; }
@@ -199,7 +207,7 @@ const STYLES = `
     align-items: center;
     justify-content: space-between;
     padding: 12px 14px;
-    background: ${COLORS.bgElevated};
+    background: ${COLORS.bgSurface};
     border: 1px solid transparent;
     border-radius: 12px;
     cursor: pointer;
@@ -209,7 +217,7 @@ const STYLES = `
   }
   @keyframes nexaFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   #nexa-dev-overlay .nexa-request-item:hover {
-    background: ${COLORS.border};
+    background: rgba(23, 32, 51, 0.92);
     border-color: ${COLORS.borderFocus};
     transform: translateX(2px);
   }
@@ -227,9 +235,9 @@ const STYLES = `
     letter-spacing: 0.03em;
   }
   #nexa-dev-overlay .nexa-method-get { background: ${COLORS.successBg}; color: ${COLORS.get}; }
-  #nexa-dev-overlay .nexa-method-post { background: rgba(59, 130, 246, 0.15); color: ${COLORS.post}; }
-  #nexa-dev-overlay .nexa-method-put { background: rgba(245, 158, 11, 0.15); color: ${COLORS.put}; }
-  #nexa-dev-overlay .nexa-method-patch { background: rgba(168, 85, 247, 0.15); color: ${COLORS.patch}; }
+  #nexa-dev-overlay .nexa-method-post { background: ${COLORS.accentSoft}; color: ${COLORS.post}; }
+  #nexa-dev-overlay .nexa-method-put { background: ${COLORS.warningBg}; color: ${COLORS.put}; }
+  #nexa-dev-overlay .nexa-method-patch { background: ${COLORS.infoBg}; color: ${COLORS.patch}; }
   #nexa-dev-overlay .nexa-method-delete { background: ${COLORS.errorBg}; color: ${COLORS.delete}; }
   #nexa-dev-overlay .nexa-status {
     font-size: 12px;
@@ -262,8 +270,8 @@ const STYLES = `
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
-  #nexa-dev-overlay .nexa-badge-cache { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
-  #nexa-dev-overlay .nexa-badge-retry { background: rgba(245, 158, 11, 0.15); color: ${COLORS.warning}; }
+  #nexa-dev-overlay .nexa-badge-cache { background: ${COLORS.infoBg}; color: ${COLORS.info}; }
+  #nexa-dev-overlay .nexa-badge-retry { background: ${COLORS.warningBg}; color: ${COLORS.warning}; }
   #nexa-dev-overlay .nexa-duration {
     font-size: 12px;
     font-weight: 600;
@@ -302,7 +310,7 @@ const STYLES = `
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    background: ${COLORS.bgElevated};
+    background: ${COLORS.bgSurface};
     border: 1px solid ${COLORS.border};
     border-radius: 8px;
     color: ${COLORS.textMuted};
@@ -311,11 +319,11 @@ const STYLES = `
     cursor: pointer;
     transition: all 0.15s;
   }
-  #nexa-dev-overlay .nexa-btn:hover { background: ${COLORS.border}; color: ${COLORS.text}; }
+  #nexa-dev-overlay .nexa-btn:hover { background: rgba(53, 80, 122, 0.24); color: ${COLORS.text}; }
   #nexa-dev-overlay .nexa-btn-retry { background: ${COLORS.successBg}; border-color: transparent; color: ${COLORS.success}; }
-  #nexa-dev-overlay .nexa-btn-retry:hover { background: ${COLORS.success}; color: white; }
+  #nexa-dev-overlay .nexa-btn-retry:hover { background: ${COLORS.success}; color: #052e26; }
   #nexa-dev-overlay .nexa-card {
-    background: ${COLORS.bgElevated};
+    background: ${COLORS.bgSurface};
     border: 1px solid ${COLORS.border};
     border-radius: 12px;
     padding: 16px;
@@ -365,6 +373,106 @@ const STYLES = `
     flex-direction: column;
     gap: 12px;
   }
+  /* Settings modal (overlays the content area without shifting layout) */
+  #nexa-dev-overlay .nexa-settings-panel {
+    position: absolute;
+    top: 72px;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    z-index: 2147483650;
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    background: ${COLORS.bgElevated};
+    border: 1px solid ${COLORS.border};
+    box-shadow: 0 28px 60px -24px rgba(2, 6, 23, 0.76);
+    overflow: auto;
+  }
+  #nexa-dev-overlay .nexa-settings-row { display:flex;align-items:center;gap:8px;margin-bottom:8px }
+  #nexa-dev-overlay .nexa-settings-row label{font-size:13px;color:${COLORS.textDim};min-width:70px}
+  #nexa-dev-overlay .nexa-settings-row select{padding:6px 8px;border-radius:8px;border:1px solid ${COLORS.border};background:${COLORS.bg};color:${COLORS.text}}
+
+  #nexa-dev-overlay.nexa-theme-light {
+    background: #f8fbff;
+    color: #0f172a;
+    border-color: #d8e4f2;
+    box-shadow: 0 28px 60px -24px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(148, 163, 184, 0.16);
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-header,
+  #nexa-dev-overlay.nexa-theme-light .nexa-metrics-bar,
+  #nexa-dev-overlay.nexa-theme-light .nexa-search,
+  #nexa-dev-overlay.nexa-theme-light .nexa-tabs {
+    background: #f8fbff;
+    border-color: #d8e4f2;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-logo,
+  #nexa-dev-overlay.nexa-theme-light .nexa-metric,
+  #nexa-dev-overlay.nexa-theme-light .nexa-request-item,
+  #nexa-dev-overlay.nexa-theme-light .nexa-btn,
+  #nexa-dev-overlay.nexa-theme-light .nexa-card,
+  #nexa-dev-overlay.nexa-theme-light .nexa-settings-panel {
+    background: #ffffff;
+    border-color: #d8e4f2;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-metric:hover,
+  #nexa-dev-overlay.nexa-theme-light .nexa-icon-btn:hover,
+  #nexa-dev-overlay.nexa-theme-light .nexa-btn:hover,
+  #nexa-dev-overlay.nexa-theme-light .nexa-tab:hover,
+  #nexa-dev-overlay.nexa-theme-light .nexa-request-item:hover {
+    background: #eef6ff;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-request-item:hover {
+    border-color: #93c5fd;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-search-icon,
+  #nexa-dev-overlay.nexa-theme-light .nexa-metric-label,
+  #nexa-dev-overlay.nexa-theme-light .nexa-duration,
+  #nexa-dev-overlay.nexa-theme-light .nexa-empty,
+  #nexa-dev-overlay.nexa-theme-light .nexa-empty span,
+  #nexa-dev-overlay.nexa-theme-light .nexa-row span,
+  #nexa-dev-overlay.nexa-theme-light .nexa-settings-row label {
+    color: #64748b;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-url,
+  #nexa-dev-overlay.nexa-theme-light .nexa-empty p,
+  #nexa-dev-overlay.nexa-theme-light .nexa-icon-btn,
+  #nexa-dev-overlay.nexa-theme-light .nexa-tab,
+  #nexa-dev-overlay.nexa-theme-light .nexa-btn,
+  #nexa-dev-overlay.nexa-theme-light .nexa-code {
+    color: #334155;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-metric-value,
+  #nexa-dev-overlay.nexa-theme-light .nexa-title,
+  #nexa-dev-overlay.nexa-theme-light .nexa-row strong {
+    color: #0f172a;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-search-input,
+  #nexa-dev-overlay.nexa-theme-light .nexa-settings-row select,
+  #nexa-dev-overlay.nexa-theme-light .nexa-code {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: #d8e4f2;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-search-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-tab-active {
+    color: #ffffff;
+    background: #0ea5e9 !important;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-tab-count {
+    background: rgba(14, 165, 233, 0.12);
+    color: #075985;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-code,
+  #nexa-dev-overlay.nexa-theme-light .nexa-detail,
+  #nexa-dev-overlay.nexa-theme-light .nexa-row {
+    border-color: #d8e4f2;
+  }
   #nexa-dev-overlay .nexa-slow-req {
     display: flex;
     align-items: center;
@@ -372,8 +480,33 @@ const STYLES = `
   }
 `
 
+function isDevelopmentEnv(): boolean {
+  try {
+    if (typeof process !== 'undefined') {
+      const proc = process as unknown as { env?: { NODE_ENV?: string } }
+      if (proc.env && typeof proc.env.NODE_ENV === 'string') {
+        return proc.env.NODE_ENV === 'development'
+      }
+    }
+  } catch {
+    // ignore
+  }
+  try {
+    if (typeof location !== 'undefined' && location.hostname) {
+      const host = location.hostname
+      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0') {
+        return true
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return false
+}
+
 export class DevOverlayUI {
   private panel: HTMLElement | null = null
+  private floatingIcon: HTMLElement | null = null
   private tracker: RequestTracker
   private visible = false
   private selectedRequest: TrackedRequest | null = null
@@ -410,6 +543,8 @@ export class DevOverlayUI {
       this.panel!.style.transform = 'scale(1) translateY(0)'
     })
     this.visible = true
+    // hide floating icon when panel is visible
+    this.hideFloatingIcon()
   }
 
   hide(): void {
@@ -425,6 +560,10 @@ export class DevOverlayUI {
       }
     }, 150)
     this.visible = false
+    // show floating icon when panel is hidden (if enabled and dev-only policy allows)
+    if (this.config.enabled && (!this.config.devOnly || isDevelopmentEnv())) {
+      this.showFloatingIcon()
+    }
   }
 
   toggle(): void {
@@ -446,6 +585,10 @@ export class DevOverlayUI {
     this.panel = null
     this.visible = false
     this.selectedRequest = null
+    if (this.floatingIcon) {
+      this.floatingIcon.remove()
+      this.floatingIcon = null
+    }
   }
 
   private setupKeyboardShortcut(): void {
@@ -491,20 +634,30 @@ export class DevOverlayUI {
     if (!this.canUseDOM()) {
       return
     }
+    // Prevent duplicate overlays from being mounted (HMR, multiple inits)
+    try {
+      const existing = document.getElementById('nexa-dev-overlay')
+      if (existing) {
+        existing.remove()
+      }
+    } catch {
+      // ignore
+    }
     this.panel = document.createElement('div')
     this.panel.id = 'nexa-dev-overlay'
 
     const pos = this.config.position
     const isBottom = pos.includes('bottom')
     const isRight = pos.includes('right')
+    const offsetPx = `${this.config.floatingButtonOffset ?? 24}px`
 
     this.panel.style.cssText = `
       position: fixed;
-      ${isBottom ? 'bottom: 24px;' : 'top: 24px;'}
-      ${isRight ? 'right: 24px;' : 'left: 24px;'}
+      ${isBottom ? `bottom: ${offsetPx};` : `top: ${offsetPx};`}
+      ${isRight ? `right: ${offsetPx};` : `left: ${offsetPx};`}
       width: 420px;
       max-height: 70vh;
-      z-index: 2147483647;
+      z-index: 2147483649;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -513,15 +666,39 @@ export class DevOverlayUI {
     this.panel.innerHTML = `<style>${STYLES}</style>
 
       <div class="nexa-header">
-<div class="nexa-header-left">
+        <div class="nexa-header-left">
           <div class="nexa-logo">
-            <span style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#3b82f6,#238636);width:18px;height:18px;border-radius:4px;">N</span>
+            <img src="https://raw.githubusercontent.com/Berea-Soft/nexa/refs/heads/main/src/assets/faviconNew.png" alt="Nexa" style="width:100%;height:auto;object-fit:cover;border-radius:8px;display:block;" />
           </div>
           <span class="nexa-title">Nexa DevTools</span>
         </div>
         <div class="nexa-header-actions">
+                  <button class="nexa-icon-btn nexa-btn-settings" title="Settings">${ICONS.gear}</button>
           <button class="nexa-icon-btn nexa-btn-clear" title="Clear history">${ICONS.clear}</button>
           <button class="nexa-icon-btn nexa-btn-close" title="Close (Esc)">${ICONS.close}</button>
+        </div>
+      </div>
+
+      <div class="nexa-settings-panel" style="display:none">
+        <div class="nexa-settings-row">
+          <label for="nexa-pos">Position</label>
+          <select id="nexa-pos" data-setting="position">
+            <option value="top-right">Top Right</option>
+            <option value="top-left">Top Left</option>
+            <option value="bottom-right">Bottom Right</option>
+            <option value="bottom-left">Bottom Left</option>
+          </select>
+        </div>
+        <div class="nexa-settings-row">
+          <label for="nexa-theme">Theme</label>
+          <select id="nexa-theme" data-setting="theme">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="nexa-btn nexa-btn-save">Save</button>
+          <button class="nexa-btn nexa-btn-cancel">Cancel</button>
         </div>
       </div>
 
@@ -558,8 +735,18 @@ export class DevOverlayUI {
     `
 
     document.body.appendChild(this.panel)
+    // Apply theme class immediately so initial render reflects persisted theme
+    if (this.config.theme === 'light') {
+      this.panel.classList.add('nexa-theme-light')
+    } else {
+      this.panel.classList.remove('nexa-theme-light')
+    }
     this.bindEvents()
     this.removeTrackerListener = this.tracker.onChange(() => this.render())
+    const canShowFloating = !this.config.devOnly || isDevelopmentEnv()
+    if (this.config.enabled && canShowFloating) {
+      this.createFloatingIcon()
+    }
     this.hide()
 
     this.globalKeyboardHandler = (e: KeyboardEvent) => {
@@ -629,6 +816,79 @@ export class DevOverlayUI {
         }
       })
     })
+
+    // Settings button
+    this.panel
+      .querySelector('.nexa-btn-settings')
+      ?.addEventListener('click', () => {
+        const sp = this.panel!.querySelector(
+          '.nexa-settings-panel',
+        ) as HTMLElement | null
+        if (!sp) {
+          return
+        }
+        // toggle as modal (use flex so layout inside works)
+        const posSel = this.panel!.querySelector(
+          '[data-setting="position"]',
+        ) as HTMLSelectElement | null
+        const themeSel = this.panel!.querySelector(
+          '[data-setting="theme"]',
+        ) as HTMLSelectElement | null
+        const isOpen = sp.style.display === 'flex'
+        sp.style.display = isOpen ? 'none' : 'flex'
+        if (!isOpen) {
+          // opening: hide the floating button so modal is not obstructed
+          this.hideFloatingIcon()
+          if (posSel) {
+            posSel.value = this.config.position
+          }
+          if (themeSel) {
+            themeSel.value = this.config.theme
+          }
+          posSel?.focus()
+        }
+      })
+
+    this.panel
+      .querySelector('.nexa-btn-save')
+      ?.addEventListener('click', () => {
+        const posSel = this.panel!.querySelector(
+          '[data-setting="position"]',
+        ) as HTMLSelectElement | null
+        const themeSel = this.panel!.querySelector(
+          '[data-setting="theme"]',
+        ) as HTMLSelectElement | null
+        const newPos = posSel?.value as DevOverlayConfig['position'] | undefined
+        const newTheme = themeSel?.value as
+          | DevOverlayConfig['theme']
+          | undefined
+        const partial: Partial<DevOverlayConfig> = {}
+        if (newPos !== undefined) {
+          partial.position = newPos
+        }
+        if (newTheme !== undefined) {
+          partial.theme = newTheme
+        }
+        const newConfig = this.tracker.updateConfig(partial)
+        this.applyConfigToUI(newConfig)
+        const sp = this.panel!.querySelector(
+          '.nexa-settings-panel',
+        ) as HTMLElement | null
+        if (sp) {
+          sp.style.display = 'none'
+        }
+      })
+
+    this.panel
+      .querySelector('.nexa-btn-cancel')
+      ?.addEventListener('click', () => {
+        const sp = this.panel!.querySelector(
+          '.nexa-settings-panel',
+        ) as HTMLElement | null
+        if (sp) {
+          sp.style.display = 'none'
+        }
+      })
   }
 
   private render(): void {
@@ -880,5 +1140,141 @@ export class DevOverlayUI {
       typeof document.createElement === 'function' &&
       !!document.body
     )
+  }
+
+  // Floating icon helpers
+  private createFloatingIcon(): void {
+    if (!this.canUseDOM()) {
+      return
+    }
+
+    // Remove any existing floating element to avoid duplicates (HMR or multiple inits)
+    try {
+      const existingBtn = document.getElementById(
+        'nexa-dev-overlay-floating',
+      ) as HTMLElement | null
+      if (existingBtn) {
+        existingBtn.remove()
+      }
+    } catch {
+      // ignore
+    }
+    if (this.floatingIcon) {
+      this.floatingIcon.remove()
+      this.floatingIcon = null
+    }
+
+    const btn = document.createElement('button')
+    btn.id = 'nexa-dev-overlay-floating'
+    btn.title = 'Toggle Nexa DevTools'
+
+    const size = this.config.floatingButtonSize ?? 48
+    const offset = this.config.floatingButtonOffset ?? 24
+    const pos = this.config.position || 'bottom-right'
+    const isBottom = pos.includes('bottom')
+    const isRight = pos.includes('right')
+    const posStyles = `${isBottom ? `bottom: ${offset}px;` : `top: ${offset}px;`} ${isRight ? `right: ${offset}px;` : `left: ${offset}px;`}`
+
+    const floatingTheme =
+      this.config.floatingButtonTheme === 'inherit'
+        ? this.config.theme
+        : this.config.floatingButtonTheme
+
+    let bg = 'linear-gradient(135deg,#0ea5e9,#8b5cf6)'
+    let color = '#ffffff'
+    let boxShadow = '0 16px 36px rgba(2,6,23,0.34)'
+    let border = 'none'
+
+    if (floatingTheme === 'light') {
+      bg = 'linear-gradient(135deg,#f8fbff,#e0f2fe)'
+      color = '#0f172a'
+      boxShadow = '0 14px 30px rgba(15,23,42,0.16)'
+      border = '1px solid #d8e4f2'
+    }
+
+    btn.style.cssText = `
+      position: fixed;
+      ${posStyles}
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      border: ${border};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2147483648;
+      cursor: pointer;
+      box-shadow: ${boxShadow};
+      background: ${bg};
+      color: ${color};
+      font-weight: 700;
+      font-size: ${Math.max(12, Math.floor(size / 3))}px;
+    `
+
+    btn.innerHTML = `<img src="https://raw.githubusercontent.com/Berea-Soft/nexa/refs/heads/main/src/assets/faviconNew.png" alt="Nexa" style="width:${size - 10}px;height:auto;object-fit:cover;border-radius:999px;display:block;" />`
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.toggle()
+    })
+
+    btn.addEventListener('mousedown', (ev) => ev.preventDefault())
+
+    document.body.appendChild(btn)
+    // If the panel is currently visible, keep the floating button hidden
+    btn.style.display = this.visible ? 'none' : 'flex'
+    this.floatingIcon = btn
+  }
+
+  private showFloatingIcon(): void {
+    if (!this.floatingIcon) {
+      if (this.config.enabled) {
+        this.createFloatingIcon()
+      }
+      return
+    }
+    this.floatingIcon.style.display = 'flex'
+  }
+
+  private hideFloatingIcon(): void {
+    if (!this.floatingIcon) {
+      return
+    }
+    this.floatingIcon.style.display = 'none'
+  }
+
+  private applyConfigToUI(newConfig?: Required<DevOverlayConfig>): void {
+    this.config = newConfig ?? this.tracker.getConfig()
+    const pos = this.config.position
+    const isBottom = pos.includes('bottom')
+    const isRight = pos.includes('right')
+    const offsetPx = `${this.config.floatingButtonOffset ?? 24}px`
+
+    if (this.panel) {
+      this.panel.style.bottom = isBottom ? offsetPx : ''
+      this.panel.style.top = isBottom ? '' : offsetPx
+      this.panel.style.right = isRight ? offsetPx : ''
+      this.panel.style.left = isRight ? '' : offsetPx
+      if (this.config.theme === 'light') {
+        this.panel.classList.add('nexa-theme-light')
+      } else {
+        this.panel.classList.remove('nexa-theme-light')
+      }
+    }
+
+    // Recreate floating icon to apply new size/position/theme
+    if (this.floatingIcon) {
+      this.floatingIcon.remove()
+      this.floatingIcon = null
+    }
+    if (this.config.enabled && (!this.config.devOnly || isDevelopmentEnv())) {
+      this.createFloatingIcon()
+    }
+  }
+
+  // Public helper to allow external callers (e.g. HMR or createDevOverlay)
+  // to request the UI to refresh according to the tracker config.
+  public refreshConfig(newConfig?: Required<DevOverlayConfig>): void {
+    this.applyConfigToUI(newConfig)
   }
 }

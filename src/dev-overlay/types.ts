@@ -32,4 +32,15 @@ export interface DevOverlayConfig {
   keyboardShortcut?: string
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'
   theme?: 'dark' | 'light'
+  /**
+   * When true the floating button and overlay UI will only be created
+   * when running in a development environment. Defaults to true.
+   */
+  devOnly?: boolean
+  /** Size in pixels for the floating button (width & height). Default 48 */
+  floatingButtonSize?: number
+  /** Offset in pixels from the viewport edges. Default 24 */
+  floatingButtonOffset?: number
+  /** Theme for the floating button. 'inherit' uses overlay theme. Default 'inherit' */
+  floatingButtonTheme?: 'inherit' | 'dark' | 'light'
 }

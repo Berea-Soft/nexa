@@ -2,12 +2,12 @@
   <img src="assets/Logo.png" alt="Nexa Logo" width="120" height="120" />
   <h1 align="center">@bereasoftware/nexa</h1>
   <p align="center">
-    A modern, type-safe HTTP client that combines the power of <code>fetch</code> with the convenience of <code>axios</code> — built on SOLID principles.
+    A modern, type-safe HTTP client that combines the power of <code>fetch</code> with the convenience of <code>axios</code>, and adds built-in development observability through <code>Dev Overlay</code>.
   </p>
 </p>
 
 <p align="center">
-  <a href="#tests"><img src="https://img.shields.io/badge/Tests-213_passing-brightgreen?style=for-the-badge" alt="Tests" /></a>
+  <a href="#tests"><img src="https://img.shields.io/badge/Tests-219_passing-brightgreen?style=for-the-badge" alt="Tests" /></a>
   <a href="#test-coverage"><img src="https://img.shields.io/badge/Coverage-See_report-orange?style=for-the-badge" alt="Coverage" /></a>
   <a href="https://www.npmjs.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/npm/v/@bereasoftware/nexa?style=for-the-badge" alt="NPM Version" /></a>
   <a href="https://bundlephobia.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/bundlephobia/minzip/@bereasoftware/nexa?label=Bundle&style=for-the-badge" alt="Bundle Size" /></a>
@@ -34,6 +34,20 @@
 > - [Migration](MIGRATION.md) — From axios/fetch
 > - [Support](SUPPORT.md) — How to get help
 > - [Skills](SKILLS.md) — Project competencies
+
+---
+
+## Positioning
+
+Nexa is not trying to be just another `fetch` wrapper.
+
+The library is designed to combine three concerns in one package:
+
+- a type-safe HTTP API with zero runtime dependencies
+- real extensibility through retries, caching, middleware, and plugins
+- built-in development observability through `Dev Overlay`
+
+That makes it useful not only as an HTTP client, but also as a foundation for SDKs, internal tooling, and workflows where debugging experience matters.
 
 ---
 
@@ -993,7 +1007,7 @@ const result = await client.get("/users");
 ### API
 
 ```typescript
-createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevOverlayUI }
+createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevOverlayUI; config: Required<DevOverlayConfig> }
 ```
 
 **Configuration options:**
@@ -1005,6 +1019,10 @@ createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevO
 | `theme` | `'dark' \| 'light'` | `'dark'` | Typed visual theme; the current UI is optimized for dark mode |
 | `maxHistory` | `number` | `500` | Maximum requests in history |
 | `keyboardShortcut` | `string` | `'ctrl+shift+n'` | Keyboard shortcut |
+| `devOnly` | `boolean` | `true` | When true the UI mounts only in development environments (NODE_ENV=development or localhost) |
+| `floatingButtonSize` | `number` | `64` | Floating button width & height in pixels |
+| `floatingButtonOffset` | `number` | `24` | Offset from viewport edges in pixels |
+| `floatingButtonTheme` | `'inherit' \| 'dark' \| 'light'` | `'inherit'` | Floating button theme; `'inherit'` uses the overlay `theme` |
 
 **Behavior notes:**
 

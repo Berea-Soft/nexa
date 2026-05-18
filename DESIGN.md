@@ -43,6 +43,24 @@ Every aspect of Nexa can be customized:
 - Sensible defaults that work out of the box
 - Progressive disclosure — simple for basics, powerful for advanced
 - Comprehensive documentation in Spanish and English
+- Built-in development observability through Dev Overlay in browser flows
+
+### 5. Development Observability as a First-Class Concern
+
+Nexa is designed not only to send HTTP requests, but also to make request behavior easier to inspect during development.
+
+The Dev Overlay is part of that philosophy:
+
+- request history and metrics should be easy to inspect
+- debugging should not require external runtime dependencies
+- development tooling should remain tree-shakeable and optional
+
+Support policy for the overlay:
+
+- Public API: yes
+- Intended scope: browser development workflows
+- Runtime expectation: DOM available
+- SSR/Node behavior: safe to import, but UI does not mount without a DOM
 
 ## Naming Conventions
 

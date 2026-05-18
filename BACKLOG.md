@@ -26,7 +26,7 @@
   Objetivo: unificar el patrón de imports/exports del proyecto.
   Criterio de aceptación: `src/index.ts` y los submódulos siguen una convención consistente y estable.
 
-- [ ] `design(api): define dev-overlay stability and public support level`
+- [x] `design(api): define dev-overlay stability and public support level`
   Objetivo: decidir si el overlay es `experimental`, `stable` o estrictamente `dev-only`.
   Criterio de aceptación: la API pública del overlay queda definida y comunicada de forma explícita.
 
@@ -42,7 +42,7 @@
   Objetivo: documentar cómo se usa el overlay, en qué entornos aplica y qué límites tiene.
   Criterio de aceptación: `README.md` y `README.en.md` incluyen sección del overlay.
 
-- [ ] `docs(product): add overlay screenshot or gif`
+- [x] `docs(product): add overlay screenshot or gif`
   Objetivo: hacer visible la feature en docs y promoción.
   Criterio de aceptación: existe al menos una demo visual reutilizable.
 
@@ -50,7 +50,7 @@
   Objetivo: documentar `createDevOverlay`, `getDevOverlay`, `destroyDevOverlay` y `RequestTracker`.
   Criterio de aceptación: la documentación explica propósito, uso esperado y alcance de esos exports.
 
-- [ ] `docs(product): strengthen Nexa positioning around observability and DX`
+- [x] `docs(product): strengthen Nexa positioning around observability and DX`
   Objetivo: reforzar que Nexa no es solo un cliente HTTP, sino también una herramienta con observabilidad integrada.
   Criterio de aceptación: README, examples y material promocional reflejan esa diferenciación.
 
@@ -102,8 +102,8 @@
 - [x] `chore(build): remove deprecated Vite inlineDynamicImports config`
 - [x] `docs(dev-overlay): document setup, scope and limitations`
 - [x] `docs(api): clarify dev-overlay exports in public documentation`
-- [ ] `docs(product): add overlay screenshot or gif`
-- [ ] `docs(product): strengthen Nexa positioning around observability and DX`
+- [x] `docs(product): add overlay screenshot or gif`
+- [x] `docs(product): strengthen Nexa positioning around observability and DX`
 - [ ] `chore(examples): add focused dev-overlay examples or demo page`
 
 ## Cambios Estructurales
@@ -113,7 +113,7 @@
 - [x] `fix(dev-overlay): replace hardcoded repo asset path with inline or configurable icon`
 - [x] `test(dev-overlay): add tracker and lifecycle coverage`
 - [ ] `refactor(esm): normalize root exports to explicit ESM-compatible paths`
-- [ ] `design(api): define dev-overlay stability and public support level`
+- [x] `design(api): define dev-overlay stability and public support level`
 - [ ] `feat(dev-overlay): persist panel state and preferences`
 - [ ] `feat(dev-overlay): add copy-as-fetch and export history actions`
 - [ ] `feat(dev-overlay): allow configurable branding or icon customization`
@@ -137,7 +137,7 @@
 ### v1.4.1+
 
 - [ ] `refactor(esm): normalize root exports to explicit ESM-compatible paths`
-- [ ] `design(api): define dev-overlay stability and public support level`
+- [x] `design(api): define dev-overlay stability and public support level`
 - [ ] `feat(dev-overlay): persist panel state and preferences`
 - [ ] `feat(dev-overlay): add copy-as-fetch and export history actions`
 - [ ] `feat(dev-overlay): allow configurable branding or icon customization`

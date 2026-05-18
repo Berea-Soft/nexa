@@ -2,12 +2,12 @@
   <img src="src/assets/Logo.png" alt="Nexa Logo" />
   <h1 align="center">@bereasoftware/nexa</h1>
   <p align="center">
-    Un cliente HTTP moderno y type-safe que combina el poder de <code>fetch</code> con la comodidad de <code>axios</code> — construido sobre principios SOLID.
+    Un cliente HTTP moderno y type-safe que combina el poder de <code>fetch</code> con la comodidad de <code>axios</code>, y añade observabilidad integrada para desarrollo con <code>Dev Overlay</code>.
   </p>
 </p>
 
 <p align="center">
-  <a href="#tests"><img src="https://img.shields.io/badge/Tests-213_pasando-brightgreen?style=for-the-badge" alt="Tests" /></a>
+  <a href="#tests"><img src="https://img.shields.io/badge/Tests-219_pasando-brightgreen?style=for-the-badge" alt="Tests" /></a>
   <a href="#test-coverage"><img src="https://img.shields.io/badge/Coverage-Ver_reporte-orange?style=for-the-badge" alt="Coverage" /></a>
   <a href="https://www.npmjs.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/npm/v/@bereasoftware/nexa?style=for-the-badge" alt="NPM Version" /></a>
   <a href="https://bundlephobia.com/package/@bereasoftware/nexa"><img src="https://img.shields.io/bundlephobia/minzip/@bereasoftware/nexa?label=Bundle&style=for-the-badge" alt="Bundle Size" /></a>
@@ -34,6 +34,20 @@
 > - [Migración](MIGRATION.md) — Desde axios/fetch
 > - [Soporte](SUPPORT.md) — Cómo obtener ayuda
 > - [Skills](SKILLS.md) — Competencias del proyecto
+
+---
+
+## Posicionamiento
+
+Nexa no busca ser solo otro wrapper de `fetch`.
+
+La librería está diseñada para combinar tres cosas en un solo paquete:
+
+- una API HTTP type-safe y sin dependencias runtime
+- extensibilidad real con retries, caché, middlewares y plugins
+- observabilidad integrada para desarrollo con `Dev Overlay`
+
+Eso la hace útil no solo como cliente HTTP, sino también como base para SDKs, tooling interno y flujos donde la experiencia de depuración importa.
 
 ---
 
@@ -1324,13 +1338,26 @@ const result = await client.get("/users");
 - **Métricas en tiempo real** — Total requests, promedio, throughput, éxitos y fallos
 - **Búsqueda y filtro** — Filtra por URL, método o status (`Ctrl+F`)
 - **Detalle de request** — Click en cualquier request para ver headers, body y timing
+
+### Persistencia de configuración
+
+El `Dev Overlay` persiste la configuración del usuario (posición, tema, tamaño del botón flotante, etc.) en `localStorage` bajo la clave `nexa.devOverlay.config`.
+
+
+Al llamar a `createDevOverlay()` la configuración que se aplica sigue el orden de preferencia (los valores persistidos en `localStorage` tienen prioridad por diseño):
+
+- Valores por defecto ← (`defaultDevOverlayConfig`)
+- Opciones pasadas a `createDevOverlay()` (argumento `config`)
+- Valores persistidos en `localStorage` (sobrescriben los anteriores)
+
+En entornos sin DOM (por ejemplo, durante tests en Node) el componente visual no se monta, pero el `tracker` sigue inicializándose y respeta la carga y persistencia de la configuración.
 - **Retry rápido** — Reejecuta la URL seleccionada con `fetch` para una verificación rápida
 - **Keyboard shortcuts** — `Ctrl+Shift+N` / `Cmd+Shift+N` (toggle), `Escape` (cerrar), `Ctrl+F` / `Cmd+F` (buscar)
 
 ### API
 
 ```typescript
-createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevOverlayUI }
+createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevOverlayUI; config: Required<DevOverlayConfig> }
 ```
 
 **Opciones de configuración:**
@@ -1342,6 +1369,10 @@ createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevO
 | `theme` | `'dark' \| 'light'` | `'dark'` | Tema visual tipado; la UI actual está optimizada para el tema oscuro |
 | `maxHistory` | `number` | `500` |Máximo de requests en historial |
 | `keyboardShortcut` | `string` | `'ctrl+shift+n'` | Atajo de teclado |
+| `devOnly` | `boolean` | `true` | Cuando es true, la UI solo se monta en entornos de desarrollo (NODE_ENV=development o localhost) |
+| `floatingButtonSize` | `number` | `64` | Tamaño (ancho & alto) del botón flotante en píxeles |
+| `floatingButtonOffset` | `number` | `24` | Offset desde los bordes de la ventana en píxeles |
+| `floatingButtonTheme` | `'inherit' \| 'dark' \| 'light'` | `'inherit'` | Tema del botón flotante; `'inherit'` usa el `theme` del overlay |
 
 **Notas de comportamiento:**
 

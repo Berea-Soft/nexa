@@ -1,5 +1,31 @@
 import type { TrackedRequest, DevMetrics, DevOverlayConfig } from './types'
 
+const STORAGE_KEY = 'nexa.devOverlay.config'
+
+export function loadPersistedConfig(): Partial<DevOverlayConfig> {
+  try {
+    if (typeof localStorage === 'undefined') {
+      return {}
+    }
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) {
+      return {}
+    }
+    return JSON.parse(raw) as Partial<DevOverlayConfig>
+  } catch {
+    return {}
+  }
+}
+
+function savePersistedConfig(cfg: Partial<DevOverlayConfig>): void {
+  try {
+    if (typeof localStorage === 'undefined') {
+      return
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg))
+  } catch {}
+}
+
 export class RequestTracker {
   private history: TrackedRequest[] = []
   private maxHistory: number
@@ -15,6 +41,10 @@ export class RequestTracker {
       keyboardShortcut: config.keyboardShortcut ?? 'ctrl+shift+n',
       position: config.position ?? 'bottom-right',
       theme: config.theme ?? 'dark',
+      devOnly: config.devOnly ?? true,
+      floatingButtonSize: config.floatingButtonSize ?? 48,
+      floatingButtonOffset: config.floatingButtonOffset ?? 24,
+      floatingButtonTheme: config.floatingButtonTheme ?? 'inherit',
     }
   }
 
@@ -73,6 +103,20 @@ export class RequestTracker {
   }
 
   getConfig(): Required<DevOverlayConfig> {
+    return this.config
+  }
+
+  updateConfig(partial: Partial<DevOverlayConfig>): Required<DevOverlayConfig> {
+    this.config = {
+      ...this.config,
+      ...partial,
+    }
+    // Keep internal maxHistory in sync
+    this.maxHistory = this.config.maxHistory
+    // persist updated config
+    try {
+      savePersistedConfig(this.config)
+    } catch {}
     return this.config
   }
 
