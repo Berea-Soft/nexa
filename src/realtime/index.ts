@@ -11,8 +11,8 @@ export type {
   IRealtimeClient,
   IWebSocketClient,
   ISSEClient,
-} from '../types/index.js';
+} from '../types/index.js'
 
-export { createWebSocketClient } from './websocket-client.js';
-export { createSSEClient } from './sse-client.js';
-export { createRealtimePlugin } from './plugin.js';
+export { createWebSocketClient } from './websocket-client.js'
+export { createSSEClient } from './sse-client.js'
+export { createRealtimePlugin } from './plugin.js'

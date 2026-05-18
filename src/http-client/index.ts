@@ -2,7 +2,12 @@
  * HTTP Client Plugin - Main Exports
  */
 
-export { createHttpClient, HttpClient, HttpError, isHttpError } from './http-client.js';
+export {
+  createHttpClient,
+  HttpClient,
+  HttpError,
+  isHttpError,
+} from './http-client.js'
 export type {
   IHttpClient,
   HttpRequest,
@@ -23,9 +28,9 @@ export type {
   PollOptions,
   Disposer,
   Result,
-} from '../types/index.js';
+} from '../types/index.js'
 
-export { Ok, Err } from '../types/index.js';
+export { Ok, Err } from '../types/index.js'
 
 export {
   // Timeout utilities
@@ -54,11 +59,6 @@ export {
   RequestDeduplicator,
   createDedupeMiddleware,
   dedupeMiddleware,
-  // Advanced: Rate Limiting & Circuit Breaker
-  createRateLimitMiddleware,
-  rateLimitMiddleware,
-  createCircuitBreakerMiddleware,
-  circuitBreakerMiddleware,
   // Advanced: Middleware Pipeline
   MiddlewarePipeline,
   createPipeline,
@@ -93,7 +93,5 @@ export {
   MetricsPlugin,
   CachePlugin,
   DedupePlugin,
-  RateLimitPlugin,
-  CircuitBreakerPlugin,
   type Plugin,
-} from '../utils';
+} from '../utils'

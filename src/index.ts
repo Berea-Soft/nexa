@@ -3,11 +3,18 @@
  * Combines fetch power + axios convenience with SOLID principles
  */
 
-export * from './http-client';
-
-// Realtime communication
-export * from './realtime/index.js';
-
-// Testing utilities
-export { createMockClient, MockAdapter } from './testing/index.js';
-export type { MockResponse, MockClientOptions } from './testing/index.js';
+export * from './http-client'
+export * from './realtime'
+export * from './types'
+export * from './utils'
+export {
+  createDevOverlay,
+  getDevOverlay,
+  destroyDevOverlay,
+} from './dev-overlay'
+export type {
+  TrackedRequest,
+  DevMetrics,
+  DevOverlayConfig,
+} from './dev-overlay'
+export { RequestTracker } from './dev-overlay'

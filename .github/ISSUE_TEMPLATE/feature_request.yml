@@ -1,0 +1,76 @@
+name: Feature Request
+description: Suggest an idea or enhancement for Nexa
+title: '[Feature]: '
+labels: ['enhancement', 'triage']
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please provide as much detail as possible to help us understand your idea.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Describe the use case.
+      placeholder: |
+        I'm always frustrated when...
+        I need to be able to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-api
+    attributes:
+      label: Proposed API
+      description: How would you expect to use this feature? Include code examples.
+      placeholder: |
+        ```typescript
+        // Example of how the API could look
+        const client = createHttpClient({ ... });
+        const result = await client.newFeature('/endpoint', { ... });
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternative solutions have you tried or considered?
+      placeholder: |
+        I've tried using...
+        Another option could be...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or examples from other libraries?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Nice to have
+        - Important
+        - Critical (blocking my usage)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: This feature aligns with Nexa's core philosophy (zero deps, type-safe, composable)
+          required: true

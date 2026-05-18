@@ -14,7 +14,7 @@ Por favor, lee y sigue nuestro [Código de Conducta](CODE_OF_CONDUCT.md) antes d
 ### Prerrequisitos
 
 - Node.js 20 o posterior
-- npm 10 o posterior
+- pnpm 10 o posterior
 - TypeScript 6.0 o posterior
 
 ### Configuración de desarrollo
@@ -27,7 +27,7 @@ Por favor, lee y sigue nuestro [Código de Conducta](CODE_OF_CONDUCT.md) antes d
    ```
 3. **Instala las dependencias**:
    ```bash
-   npm install
+   pnpm install
    ```
 4. **Crea una rama** para tu funcionalidad o corrección:
    ```bash
@@ -64,29 +64,36 @@ Usamos Vitest para testing. Ejecuta los tests con:
 
 ```bash
 # Ejecutar todos los tests
-npm test
+pnpm test
 
 # Ejecutar tests en modo watch
-npm run test:watch
+pnpm test:watch
 
 # Ejecutar tests con UI
-npm run test:ui
+pnpm test:ui
 
 # Ejecutar tests con cobertura
-npm run test:coverage
+pnpm test:coverage
 ```
 
 ### Verificación de tipos
 
 ```bash
-npm run lint
+pnpm lint
 ```
 
 ### Construcción
 
 ```bash
-npm run build
+pnpm build
 ```
+
+### Releases y publicación
+
+Los releases son automatizados. No publiques manualmente desde una máquina local salvo que los mantenedores lo indiquen explícitamente.
+
+- La publicación del paquete se resuelve mediante automatización de releases después del flujo correspondiente
+- La verificación local del contribuidor debe usar `pnpm test`, `pnpm lint` y `pnpm build`
 
 Esto generará los siguientes archivos en `dist/`:
 - `nexa.es.js` (ESM)

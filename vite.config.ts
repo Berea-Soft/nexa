@@ -1,8 +1,7 @@
 import { defineConfig, type UserConfig } from "vite";
 import { dirname, resolve } from "path";
-import { existsSync, readFileSync, rmSync } from "fs";
+import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
-import dts from "vite-plugin-dts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,32 +13,8 @@ const banner = `/*! Nexa v${
   pack.version
 } | (c) ${new Date().getFullYear()} Berea-Soft | MIT License | https://github.com/Berea-Soft/Nexa */`;
 
-const distTypesSrcDir = resolve(__dirname, "dist", "types", "src");
-
 export default defineConfig({
-  plugins: [
-    dts({
-      rollupTypes: false,
-      insertTypesEntry: true,
-      copyDtsFiles: true,
-      entryRoot: "src",
-      outDir: "dist/types",
-      include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts", "src/**/*.spec.ts"],
-      beforeWriteFile: (filePath, content) => {
-        const normalizedPath = filePath.replace(
-          /([\\/])dist\1types\1src(?=[\\/])/,
-          "$1dist$1types",
-        );
-        return { filePath: normalizedPath, content };
-      },
-      afterBuild: () => {
-        if (existsSync(distTypesSrcDir)) {
-          rmSync(distTypesSrcDir, { recursive: true, force: true });
-        }
-      },
-    }),
-  ],
+  plugins: [],
   checks: {
     pluginTimings: false,
   },

@@ -8,114 +8,125 @@
  * Represents a successful or failed result
  * Allows for type-safe error handling without exceptions
  */
-export type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
+export type Result<T, E = Error> =
+  | { ok: true; value: T }
+  | { ok: false; error: E }
 
-export const Ok = <T,>(value: T): Result<T> => ({ ok: true, value });
-export const Err = <E,>(error: E): Result<never, E> => ({ ok: false, error });
+export const Ok = <T>(value: T): Result<T> => ({ ok: true, value })
+export const Err = <E>(error: E): Result<never, E> => ({ ok: false, error })
 
 // ============= HTTP Request/Response =============
 export interface HttpRequest {
-  url: string;
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
-  headers?: Record<string, string>;
-  body?: unknown;
-  query?: Record<string, string | number | boolean>;
-  params?: Record<string, string | number>;
-  timeout?: HttpTimeout;
-  signal?: AbortSignal;
+  url: string
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
+  headers?: Record<string, string>
+  body?: unknown
+  query?: Record<string, string | number | boolean>
+  params?: Record<string, string | number>
+  timeout?: HttpTimeout
+  signal?: AbortSignal
   /**
    * Controls cookie/credential policy for CORS requests. Same as fetch API.
    * 'omit' | 'same-origin' | 'include'
    */
-  credentials?: RequestCredentials;
+  credentials?: RequestCredentials
   /**
-   * Adapter personalizado para esta request (firma igual a fetch).
+   * Custom adapter for this request (same signature as fetch).
    */
-  adapter?: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+  adapter?: (input: RequestInfo, init?: RequestInit) => Promise<Response>
   /**
-   * Si es true (default), convierte automáticamente el body a FormData si detecta archivos.
+   * If true (default), automatically converts body to FormData if files are detected.
    */
-  autoFormData?: boolean;
+  autoFormData?: boolean
   /**
    * Transport layer to use for this request.
    * Overrides global transport setting.
    */
-  transport?: 'fetch' | 'node' | 'http2' | 'deno' | 'bun' | 'cloudflare';
+  transport?: 'fetch' | 'node' | 'http2' | 'deno' | 'bun' | 'cloudflare'
   /**
    * Node.js specific transport options for this request.
    * Overrides global nodeOptions.
    */
-  nodeOptions?: NodeTransportOptions;
+  nodeOptions?: NodeTransportOptions
 }
 
 export interface HttpResponse<T = unknown> {
-  status: number;
-  statusText: string;
-  headers: Headers;
-  data: T;
-  request: HttpRequest;
-  duration: number;
+  status: number
+  statusText: string
+  headers: Headers
+  data: T
+  request: HttpRequest
+  duration: number
 }
 
 export interface HttpErrorDetails {
-  message: string;
-  status?: number;
-  statusText?: string;
-  code?: string;
-  originalError?: unknown;
+  message: string
+  status?: number
+  statusText?: string
+  code?: string
+  originalError?: unknown
   /**
    * The HTTP request that caused the error (available for both network and HTTP errors)
    */
-  request?: HttpRequest;
+  request?: HttpRequest
   /**
    * The HTTP response if the request reached the server and received a response (HTTP errors only)
    */
-  response?: HttpResponse<unknown>;
+  response?: HttpResponse<unknown>
   /**
    * The configuration used for the request
    */
-  config?: HttpRequestConfig;
+  config?: HttpRequestConfig
 }
 
 // ============= Progress =============
 export interface ProgressEvent {
-  loaded: number;
-  total: number;
-  percent: number;
+  loaded: number
+  total: number
+  percent: number
 }
 
 // ============= Lifecycle Hooks =============
 export interface RequestHooks<T = unknown> {
-  onStart?: (request: HttpRequest) => void;
-  onSuccess?: (response: HttpResponse<T>) => void;
-  onError?: (error: HttpErrorDetails) => void;
-  onFinally?: () => void;
-  onRetry?: (attempt: number, error: HttpErrorDetails) => void;
+  onStart?: (request: HttpRequest) => void
+  onSuccess?: (response: HttpResponse<T>) => void
+  onError?: (error: HttpErrorDetails) => void
+  onFinally?: () => void
+  onRetry?: (attempt: number, error: HttpErrorDetails) => void
 }
 
 // ============= Interceptor Pattern (Open/Closed) =============
 export interface RequestInterceptor {
-  onRequest(request: HttpRequest): HttpRequest | Promise<HttpRequest>;
-  onError?(error: HttpErrorDetails): HttpErrorDetails | Promise<HttpErrorDetails>;
+  onRequest(request: HttpRequest): HttpRequest | Promise<HttpRequest>
+  onError?(
+    error: HttpErrorDetails,
+  ): HttpErrorDetails | Promise<HttpErrorDetails>
 }
 
 export interface ResponseInterceptor {
-  onResponse<T = unknown>(response: HttpResponse<T>): HttpResponse<T> | Promise<HttpResponse<T>>;
-  onError?(error: HttpErrorDetails): HttpErrorDetails | Promise<HttpErrorDetails>;
+  onResponse<T = unknown>(
+    response: HttpResponse<T>,
+  ): HttpResponse<T> | Promise<HttpResponse<T>>
+  onError?(
+    error: HttpErrorDetails,
+  ): HttpErrorDetails | Promise<HttpErrorDetails>
 }
 
 // ============= Retry Strategy (Strategy Pattern) =============
-export type RetryCondition = (error: HttpErrorDetails, attempt: number) => boolean;
+export type RetryCondition = (
+  error: HttpErrorDetails,
+  attempt: number,
+) => boolean
 
 export interface RetryStrategy {
-  shouldRetry(attempt: number, error: HttpErrorDetails): boolean;
-  delayMs(attempt: number): number;
+  shouldRetry(attempt: number, error: HttpErrorDetails): boolean
+  delayMs(attempt: number): number
 }
 
 export interface InlineRetryConfig {
-  maxAttempts?: number;
-  backoffMs?: number;
-  on?: RetryCondition;
+  maxAttempts?: number
+  backoffMs?: number
+  on?: RetryCondition
 }
 
 // ============= Node.js Transport Options =============
@@ -126,52 +137,59 @@ export interface NodeTransportOptions {
   /**
    * Enable keep-alive connections. Default: true
    */
-  keepAlive?: boolean;
+  keepAlive?: boolean
   /**
    * Maximum number of sockets to allow per host. Default: 50
    */
-  maxSockets?: number;
+  maxSockets?: number
   /**
    * Maximum number of sockets to leave open in a free state. Default: 10
    */
-  maxFreeSockets?: number;
+  maxFreeSockets?: number
   /**
    * Maximum number of requests per socket. Default: 0 (unlimited)
    */
-  maxRequestsPerSocket?: number;
+  maxRequestsPerSocket?: number
   /**
    * Socket timeout in milliseconds. Default: 60000 (60 seconds)
    */
-  timeout?: number;
+  timeout?: number
   /**
    * Enable HTTP/2 protocol (only when transport is 'http2').
    */
-  http2?: boolean;
+  http2?: boolean
   /**
    * HTTP/2 specific settings.
    */
-  http2Settings?: Record<string, unknown>;
+  http2Settings?: Record<string, unknown>
 }
 
 // ============= Cache Strategy (Strategy Pattern) =============
 export interface CacheStrategy {
-  get(key: string): unknown | null;
-  set(key: string, value: unknown, ttlMs?: number): void;
-  clear(): void;
-  has(key: string): boolean;
+  get(key: string): unknown | null
+  set(key: string, value: unknown, ttlMs?: number): void
+  clear(): void
+  has(key: string): boolean
 }
 
 // ============= Validation & Transform (Processing Pipeline) =============
 export interface Validator {
-  validate(data: unknown): Result<unknown, HttpErrorDetails>;
+  validate(data: unknown): Result<unknown, HttpErrorDetails>
 }
 
 export interface Transformer {
-  transform(data: unknown): unknown;
+  transform(data: unknown): unknown
 }
 
 // ============= Response Type =============
-export type ResponseType = 'json' | 'text' | 'blob' | 'arrayBuffer' | 'formData' | 'stream' | 'auto';
+export type ResponseType =
+  | 'json'
+  | 'text'
+  | 'blob'
+  | 'arrayBuffer'
+  | 'formData'
+  | 'stream'
+  | 'auto'
 
 // ============= Timeout Configuration =============
 /**
@@ -179,161 +197,202 @@ export type ResponseType = 'json' | 'text' | 'blob' | 'arrayBuffer' | 'formData'
  * - number: total timeout for the entire request (connection + response)
  * - object: differentiated timeouts for connection and response phases
  */
-export type HttpTimeout = number | {
-  /**
-   * Maximum time to establish connection (TCP/TLS handshake) in milliseconds.
-   * If not specified, no connection timeout is applied.
-   */
-  connection?: number;
-  /**
-   * Maximum time to receive complete response (after connection is established) in milliseconds.
-   * If not specified, no response timeout is applied.
-   */
-  response?: number;
-  /**
-   * Total timeout for the entire request (connection + response) in milliseconds.
-   * If specified, overrides both connection and response timeouts.
-   * Provided for backward compatibility and convenience.
-   */
-  total?: number;
-};
+export type HttpTimeout =
+  | number
+  | {
+      /**
+       * Maximum time to establish connection (TCP/TLS handshake) in milliseconds.
+       * If not specified, no connection timeout is applied.
+       */
+      connection?: number
+      /**
+       * Maximum time to receive complete response (after connection is established) in milliseconds.
+       * If not specified, no response timeout is applied.
+       */
+      response?: number
+      /**
+       * Total timeout for the entire request (connection + response) in milliseconds.
+       * If specified, overrides both connection and response timeouts.
+       * Provided for backward compatibility and convenience.
+       */
+      total?: number
+    }
 
 // ============= Request Configuration =============
-/**
- * Configuración extendida para solicitudes HTTP.
- * - credentials: controla el envío de cookies/credenciales ('omit' | 'same-origin' | 'include').
- */
 export interface HttpRequestConfig extends HttpRequest {
-      /**
-       * Si es true (default), convierte automáticamente el body a FormData si detecta archivos.
-       */
-      autoFormData?: boolean;
-    /**
-     * Compatibilidad con axios: si es true, establece credentials: 'include'; si es false, credentials: 'same-origin'.
-     * Si también se especifica credentials, este campo es ignorado.
-     */
-    withCredentials?: boolean;
-    /**
-     * Permite usar un adapter personalizado para la request (firma igual a fetch).
-     * Útil para mocks, tests, o entornos especiales.
-     */
-    adapter?: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+  retry?: RetryStrategy | InlineRetryConfig
+  timeout?: HttpTimeout
+  validate?: Validator
+  transform?: Transformer
+  cache?: { enabled: boolean; ttlMs?: number }
+  responseType?: ResponseType
+  hooks?: RequestHooks
+  onUploadProgress?: (event: ProgressEvent) => void
+  onDownloadProgress?: (event: ProgressEvent) => void
   /**
-   * Permite transformar el body antes de serializarlo y enviarlo. Similar a axios.transformRequest.
-   * Puede ser una función o un array de funciones.
+   * Axios compatibility: if true, sets credentials: 'include'; if false, credentials: 'same-origin'.
+   * If credentials is also specified, this field is ignored.
    */
-  transformRequest?: ((data: unknown, headers: Record<string, string>) => unknown) | Array<(data: unknown, headers: Record<string, string>) => unknown>;
-  retry?: RetryStrategy | InlineRetryConfig;
-  validate?: Validator;
-  transform?: Transformer;
-  cache?: { enabled: boolean; ttlMs?: number };
-  responseType?: ResponseType;
-  hooks?: RequestHooks;
-  onUploadProgress?: (event: ProgressEvent) => void;
-  onDownloadProgress?: (event: ProgressEvent) => void;
+  withCredentials?: boolean
+  /**
+   * Allows using a custom adapter for the request (same signature as fetch).
+   * Useful for mocks, tests, or special environments.
+   */
+  adapter?: (input: RequestInfo, init?: RequestInit) => Promise<Response>
+  /**
+   * Allows transforming the body before serializing and sending it. Similar to axios.transformRequest.
+   * Can be a function or an array of functions.
+   */
+  transformRequest?:
+    | ((data: unknown, headers: Record<string, string>) => unknown)
+    | Array<(data: unknown, headers: Record<string, string>) => unknown>
   /**
    * Enable debug logging for this request. Overrides global debug setting.
    */
-  debug?: boolean | 'verbose';
+  debug?: boolean | 'verbose'
   /**
    * Custom logger function for this request. Overrides global logger.
    */
-  logger?: (message: string, data?: unknown) => void;
+  logger?: (message: string, data?: unknown) => void
   /**
    * Transport layer to use for this request.
    * Overrides global transport setting.
    */
-  transport?: 'fetch' | 'node' | 'http2' | 'deno' | 'bun' | 'cloudflare';
+  transport?: 'fetch' | 'node' | 'http2' | 'deno' | 'bun' | 'cloudflare'
   /**
    * Node.js specific transport options for this request.
    * Overrides global nodeOptions.
    */
-  nodeOptions?: NodeTransportOptions;
+  nodeOptions?: NodeTransportOptions
+  /**
+   * If true (default), automatically converts body to FormData if files are detected.
+   */
+  autoFormData?: boolean
 }
 
 // ============= Pagination =============
 export interface PaginateOptions<T> {
   /** Extract items from a response page */
-  getItems: (data: T) => unknown[];
+  getItems: (data: T) => unknown[]
   /** Return the config for the next page, or null to stop */
-  getNextPage: (data: T, currentConfig: Omit<HttpRequestConfig, 'url' | 'method'>) => Omit<HttpRequestConfig, 'url' | 'method'> | null;
+  getNextPage: (
+    data: T,
+    currentConfig: Omit<HttpRequestConfig, 'url' | 'method'>,
+  ) => Omit<HttpRequestConfig, 'url' | 'method'> | null
 }
 
 // ============= Polling =============
 export interface PollOptions<T> {
   /** Interval between polls in ms */
-  intervalMs: number;
+  intervalMs: number
   /** Max number of polls (0 = unlimited) */
-  maxAttempts?: number;
+  maxAttempts?: number
   /** Stop polling when this returns true */
-  until: (data: T) => boolean;
+  until: (data: T) => boolean
   /** Called on each successful poll */
-  onPoll?: (data: T, attempt: number) => void;
+  onPoll?: (data: T, attempt: number) => void
 }
 
 // ============= HTTP Client Interface (Dependency Inversion) =============
 export interface IHttpClient {
-  request<T = unknown>(config: HttpRequestConfig): Promise<Result<HttpResponse<T>, HttpErrorDetails>>;
-  get<T = unknown>(url: string, config?: Omit<HttpRequestConfig, 'url' | 'method'>): Promise<Result<HttpResponse<T>, HttpErrorDetails>>;
-  post<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequestConfig, 'url' | 'method' | 'body'>): Promise<Result<HttpResponse<T>, HttpErrorDetails>>;
-  put<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequestConfig, 'url' | 'method' | 'body'>): Promise<Result<HttpResponse<T>, HttpErrorDetails>>;
-  patch<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequestConfig, 'url' | 'method' | 'body'>): Promise<Result<HttpResponse<T>, HttpErrorDetails>>;
-  delete<T = unknown>(url: string, config?: Omit<HttpRequestConfig, 'url' | 'method'>): Promise<Result<HttpResponse<T>, HttpErrorDetails>>;
-  head(url: string, config?: Omit<HttpRequestConfig, 'url' | 'method'>): Promise<Result<HttpResponse<void>, HttpErrorDetails>>;
-  options(url: string, config?: Omit<HttpRequestConfig, 'url' | 'method'>): Promise<Result<HttpResponse<void>, HttpErrorDetails>>;
-  addRequestInterceptor(interceptor: RequestInterceptor): Disposer;
-  addResponseInterceptor(interceptor: ResponseInterceptor): Disposer;
-  clearInterceptors(): void;
-  extend(config?: HttpClientConfig): IHttpClient;
-  paginate<T = unknown>(url: string, options: PaginateOptions<T>, config?: Omit<HttpRequestConfig, 'url' | 'method'>): AsyncIterable<T[]>;
-  poll<T = unknown>(url: string, options: PollOptions<T>, config?: Omit<HttpRequestConfig, 'url' | 'method'>): Promise<Result<HttpResponse<T>, HttpErrorDetails>>;
-  cancelAll(): void;
-  clearCache(): void;
+  request<T = unknown>(
+    config: HttpRequestConfig,
+  ): Promise<Result<HttpResponse<T>, HttpErrorDetails>>
+  get<T = unknown>(
+    url: string,
+    config?: Omit<HttpRequestConfig, 'url' | 'method'>,
+  ): Promise<Result<HttpResponse<T>, HttpErrorDetails>>
+  post<T = unknown>(
+    url: string,
+    body?: unknown,
+    config?: Omit<HttpRequestConfig, 'url' | 'method' | 'body'>,
+  ): Promise<Result<HttpResponse<T>, HttpErrorDetails>>
+  put<T = unknown>(
+    url: string,
+    body?: unknown,
+    config?: Omit<HttpRequestConfig, 'url' | 'method' | 'body'>,
+  ): Promise<Result<HttpResponse<T>, HttpErrorDetails>>
+  patch<T = unknown>(
+    url: string,
+    body?: unknown,
+    config?: Omit<HttpRequestConfig, 'url' | 'method' | 'body'>,
+  ): Promise<Result<HttpResponse<T>, HttpErrorDetails>>
+  delete<T = unknown>(
+    url: string,
+    config?: Omit<HttpRequestConfig, 'url' | 'method'>,
+  ): Promise<Result<HttpResponse<T>, HttpErrorDetails>>
+  head(
+    url: string,
+    config?: Omit<HttpRequestConfig, 'url' | 'method'>,
+  ): Promise<Result<HttpResponse<void>, HttpErrorDetails>>
+  options(
+    url: string,
+    config?: Omit<HttpRequestConfig, 'url' | 'method'>,
+  ): Promise<Result<HttpResponse<void>, HttpErrorDetails>>
+  addRequestInterceptor(interceptor: RequestInterceptor): Disposer
+  addResponseInterceptor(interceptor: ResponseInterceptor): Disposer
+  clearInterceptors(): void
+  extend(config?: HttpClientConfig): IHttpClient
+  paginate<T = unknown>(
+    url: string,
+    options: PaginateOptions<T>,
+    config?: Omit<HttpRequestConfig, 'url' | 'method'>,
+  ): AsyncIterable<T[]>
+  poll<T = unknown>(
+    url: string,
+    options: PollOptions<T>,
+    config?: Omit<HttpRequestConfig, 'url' | 'method'>,
+  ): Promise<Result<HttpResponse<T>, HttpErrorDetails>>
+  cancelAll(): void
+  clearCache(): void
 }
 
 /** Function that removes a previously added interceptor */
-export type Disposer = () => void;
+export type Disposer = () => void
 
 // ============= Create Client Config =============
 export interface HttpClientConfig {
-    /**
-     * Adapter global para todas las requests (firma igual a fetch).
-     */
-    adapter?: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
-  baseURL?: string;
-  defaultHeaders?: Record<string, string>;
+  baseURL?: string
+  defaultHeaders?: Record<string, string>
+  defaultTimeout?: HttpTimeout
+  cacheStrategy?: CacheStrategy
+  validateStatus?: (status: number) => boolean
+  maxConcurrent?: number
+  defaultResponseType?: ResponseType
+  defaultHooks?: RequestHooks
+  devTracker?: DevTracker
+  /**
+   * Global adapter for all requests (same signature as fetch).
+   */
+  adapter?: (input: RequestInfo, init?: RequestInit) => Promise<Response>
   /**
    * Controls cookie/credential policy for CORS requests. Same as fetch API.
    * 'omit' | 'same-origin' | 'include'
    */
-  credentials?: RequestCredentials;
+  credentials?: RequestCredentials
   /**
-   * Compatibilidad con axios: si es true, establece credentials: 'include'; si es false, credentials: 'same-origin'.
-   * Si también se especifica credentials, este campo es ignorado.
+   * Axios compatibility: if true, sets credentials: 'include'; if false, credentials: 'same-origin'.
+   * If credentials is also specified, this field is ignored.
    */
-  withCredentials?: boolean;
-  defaultTimeout?: HttpTimeout;
-  cacheStrategy?: CacheStrategy;
-  validateStatus?: (status: number) => boolean;
-  maxConcurrent?: number;
-  defaultResponseType?: ResponseType;
-  defaultHooks?: RequestHooks;
+  withCredentials?: boolean
   /**
-   * Permite transformar el body antes de serializarlo y enviarlo por defecto en todas las requests.
+   * Allows transforming the body before serializing and sending it by default in all requests.
    */
-  transformRequest?: ((data: unknown, headers: Record<string, string>) => unknown) | Array<(data: unknown, headers: Record<string, string>) => unknown>;
+  transformRequest?:
+    | ((data: unknown, headers: Record<string, string>) => unknown)
+    | Array<(data: unknown, headers: Record<string, string>) => unknown>
   /**
-   * Si es true (default), convierte automáticamente el body a FormData si detecta archivos.
+   * If true (default), automatically converts body to FormData if files are detected.
    */
-  autoFormData?: boolean;
+  autoFormData?: boolean
   /**
    * Enable debug logging for requests/responses. true for basic logs, 'verbose' for detailed logs.
    */
-  debug?: boolean | 'verbose';
+  debug?: boolean | 'verbose'
   /**
    * Custom logger function. If provided, replaces the default console.log with custom logging.
    */
-  logger?: (message: string, data?: unknown) => void;
+  logger?: (message: string, data?: unknown) => void
   /**
    * Transport layer to use for HTTP requests.
    * - 'fetch': Uses global fetch API (default)
@@ -342,63 +401,73 @@ export interface HttpClientConfig {
    * - 'deno': Uses Deno's fetch API (Deno environment)
    * - 'bun': Uses Bun's fetch API (Bun environment)
    * - 'cloudflare': Uses Cloudflare Workers fetch API
-   * 
-   * When 'node' or 'http2' is specified, nodeOptions can be used to configure
-   * keep-alive, connection pooling, and other Node-specific settings.
-   * 
-   * Note: Node transports are only available in Node.js environments.
-   * Deno, Bun, and Cloudflare transports use their respective fetch implementations.
    */
-  transport?: 'fetch' | 'node' | 'http2' | 'deno' | 'bun' | 'cloudflare';
+  transport?: 'fetch' | 'node' | 'http2' | 'deno' | 'bun' | 'cloudflare'
   /**
    * Node.js specific transport options.
    * Only applies when transport is 'node' or 'http2'.
    */
-  nodeOptions?: NodeTransportOptions;
+  nodeOptions?: NodeTransportOptions
 }
 
-// ============= Real-Time Communication =============
+// ============= Dev Tracker Interface =============
+export interface DevTracker {
+  track(request: {
+    method: string
+    url: string
+    status?: number
+    duration: number
+    cached: boolean
+    ok: boolean
+    code?: string
+    headers: Record<string, string>
+    body?: unknown
+    retryCount: number
+  }): void
+}
+
+// ============= Real-time Communication =============
 
 /**
  * WebSocket connection options
  */
 export interface WebSocketOptions {
   /** WebSocket protocols (subprotocols) */
-  protocols?: string | string[];
+  protocols?: string | string[]
   /** Headers to send during handshake */
-  headers?: Record<string, string>;
+  headers?: Record<string, string>
   /** Automatic reconnection settings */
   reconnect?: {
     /** Enable automatic reconnection (default: true) */
-    enabled?: boolean;
+    enabled?: boolean
     /** Base delay in ms for exponential backoff (default: 1000) */
-    baseDelay?: number;
+    baseDelay?: number
     /** Maximum delay in ms (default: 30000) */
-    maxDelay?: number;
+    maxDelay?: number
     /** Maximum number of reconnect attempts (default: Infinity) */
-    maxAttempts?: number;
+    maxAttempts?: number
     /** Called before each reconnection attempt */
-    onReconnecting?: (attempt: number, delay: number) => void;
-  };
+    onReconnecting?: (attempt: number, delay: number) => void
+  }
   /** Timeout for connection establishment in ms (default: 10000) */
-  timeout?: number;
+  timeout?: number
   /** Callback for connection open */
-  onOpen?: (event: Event) => void;
+  onOpen?: (event: Event) => void
   /** Callback for connection close */
-  onClose?: (event: CloseEvent) => void;
+  onClose?: (event: CloseEvent) => void
   /** Callback for connection error */
-  onError?: (event: Event) => void;
+  onError?: (event: Event) => void
   /** Enable heartbeat/ping-pong to keep connection alive */
   heartbeat?: {
     /** Interval in ms to send ping (default: 30000) */
-    interval?: number;
+    interval?: number
     /** Timeout in ms to wait for pong before closing (default: 5000) */
-    timeout?: number;
+    timeout?: number
     /** Custom ping message (default: 'ping') */
-    pingMessage?: string | ArrayBuffer | Blob;
+    pingMessage?: string | ArrayBuffer | Blob
     /** Custom pong message (default: 'pong') */
-    pongMessage?: string | ArrayBuffer | Blob;
-  };
+    pongMessage?: string | ArrayBuffer | Blob
+  }
 }
 
 /**
@@ -406,34 +475,34 @@ export interface WebSocketOptions {
  */
 export interface SSEOptions {
   /** Headers to send with the request */
-  headers?: Record<string, string>;
+  headers?: Record<string, string>
   /** Request method (default: GET) */
-  method?: string;
+  method?: string
   /** Request body (for POST requests) */
-  body?: unknown;
+  body?: unknown
   /** Whether to send credentials (cookies) (default: same-origin) */
-  credentials?: RequestCredentials;
+  credentials?: RequestCredentials
   /** Timeout for connection establishment in ms (default: 10000) */
-  timeout?: number;
+  timeout?: number
   /** Automatic reconnection settings */
   reconnect?: {
     /** Enable automatic reconnection (default: true) */
-    enabled?: boolean;
+    enabled?: boolean
     /** Base delay in ms for exponential backoff (default: 1000) */
-    baseDelay?: number;
+    baseDelay?: number
     /** Maximum delay in ms (default: 30000) */
-    maxDelay?: number;
+    maxDelay?: number
     /** Maximum number of reconnect attempts (default: Infinity) */
-    maxAttempts?: number;
+    maxAttempts?: number
     /** Called before each reconnection attempt */
-    onReconnecting?: (attempt: number, delay: number) => void;
-  };
+    onReconnecting?: (attempt: number, delay: number) => void
+  }
   /** Callback for connection open */
-  onOpen?: (event: Event) => void;
+  onOpen?: (event: Event) => void
   /** Callback for connection error */
-  onError?: (event: Event) => void;
+  onError?: (event: Event) => void
   /** Callback for connection close */
-  onClose?: () => void;
+  onClose?: () => void
 }
 
 /**
@@ -441,13 +510,13 @@ export interface SSEOptions {
  */
 export interface RealtimeMessageEvent<T = unknown> {
   /** Message data (parsed if possible) */
-  data: T;
+  data: T
   /** Raw message data */
-  raw: string | ArrayBuffer | Blob;
+  raw: string | ArrayBuffer | Blob
   /** Message type (for WebSocket: 'message', for SSE: event type) */
-  type: string;
+  type: string
   /** Timestamp when message was received */
-  timestamp: number;
+  timestamp: number
 }
 
 /**
@@ -455,28 +524,30 @@ export interface RealtimeMessageEvent<T = unknown> {
  */
 export interface IRealtimeClient {
   /** Connect to the server */
-  connect(): Promise<void>;
+  connect(): Promise<void>
   /** Disconnect from the server */
-  disconnect(): void;
+  disconnect(): void
   /** Send a message */
-  send(data: string | ArrayBuffer | Blob): void;
+  send(data: string | ArrayBuffer | Blob): void
   /** Subscribe to messages */
-  onMessage<T = unknown>(callback: (event: RealtimeMessageEvent<T>) => void): () => void;
+  onMessage<T = unknown>(
+    callback: (event: RealtimeMessageEvent<T>) => void,
+  ): () => void
   /** Subscribe to connection open events */
-  onOpen(callback: (event: Event) => void): () => void;
+  onOpen(callback: (event: Event) => void): () => void
   /** Subscribe to connection close events */
-  onClose(callback: (event?: CloseEvent) => void): () => void;
+  onClose(callback: (event?: CloseEvent) => void): () => void
   /** Subscribe to connection error events */
-  onError(callback: (event: Event) => void): () => void;
+  onError(callback: (event: Event) => void): () => void
   /** Get connection status */
-  getStatus(): 'connecting' | 'open' | 'closing' | 'closed';
+  getStatus(): 'connecting' | 'open' | 'closing' | 'closed'
   /** Get connection statistics */
   getStats(): {
-    messagesSent: number;
-    messagesReceived: number;
-    connectionTime: number;
-    reconnectAttempts: number;
-  };
+    messagesSent: number
+    messagesReceived: number
+    connectionTime: number
+    reconnectAttempts: number
+  }
 }
 
 /**
@@ -484,11 +555,14 @@ export interface IRealtimeClient {
  */
 export interface IWebSocketClient extends IRealtimeClient {
   /** WebSocket instance */
-  readonly socket: WebSocket | null;
+  readonly socket: WebSocket | null
   /** Send JSON data (automatically serialized) */
-  sendJson(data: unknown): void;
+  sendJson(data: unknown): void
   /** Subscribe to specific message types */
-  onMessageType<T = unknown>(type: string, callback: (data: T) => void): () => void;
+  onMessageType<T = unknown>(
+    type: string,
+    callback: (data: T) => void,
+  ): () => void
 }
 
 /**
@@ -496,11 +570,11 @@ export interface IWebSocketClient extends IRealtimeClient {
  */
 export interface ISSEClient extends IRealtimeClient {
   /** EventSource instance */
-  readonly source: EventSource | null;
+  readonly source: EventSource | null
   /** Subscribe to specific event types */
-  onEvent<T = unknown>(event: string, callback: (data: T) => void): () => void;
+  onEvent<T = unknown>(event: string, callback: (data: T) => void): () => void
   /** Last event ID */
-  readonly lastEventId: string | null;
+  readonly lastEventId: string | null
 }
 
 // ============= Global Environment Declarations =============
@@ -508,19 +582,21 @@ declare global {
   // Deno runtime
   interface Deno {
     readonly version: {
-      deno: string;
-    };
+      deno: string
+    }
   }
-  const Deno: Deno | undefined;
-  
+  const Deno: Deno | undefined
+
   // Bun runtime
   interface Bun {
-    readonly version: string;
+    readonly version: string
   }
-  const Bun: Bun | undefined;
-  
+  const Bun: Bun | undefined
+
   // Cloudflare Workers WebSocketPair
-  const WebSocketPair: {
-    new(): { 0: WebSocket; 1: WebSocket };
-  } | undefined;
+  const WebSocketPair:
+    | {
+        new (): { 0: WebSocket; 1: WebSocket }
+      }
+    | undefined
 }

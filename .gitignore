@@ -22,7 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.npmrc
-
 coverage/*
-examples/*
+.examples/*
+.pnpm-store/*
+LINKEDIN_POST.md

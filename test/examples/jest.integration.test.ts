@@ -1,12 +1,12 @@
 /**
  * Jest Integration Example
- * 
+ *
  * This file demonstrates how to use Nexa HTTP Client with Jest for testing.
  * It shows similar patterns to the Vitest example but adapted for Jest.
- * 
+ *
  * Note: Jest requires configuration to handle ES modules. Ensure your Jest config
  * includes transforms for TypeScript/ES modules.
- * 
+ *
  * Run with: npm test -- examples/jest.integration.test.ts
  * (assuming Jest is configured in your project)
  */
@@ -15,140 +15,147 @@
 // import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 // For simplicity, we assume Jest globals are available
 // For Vitest compatibility, we import vitest globals
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-import { createHttpClient } from '../../src/http-client/index.js';
-import { createMockClient } from '../../src/testing/index.js';
-import type { MockAdapter } from '../../src/testing/index.js';
+import { createHttpClient } from '../../src/http-client/index.js'
+import { createMockClient } from '../../src/testing/index.js'
+import type { MockAdapter } from '../../src/testing/index.js'
 
 // If using Jest's built-in globals, no import needed
 // If using @jest/globals, uncomment the import above and use those
 
 describe('Nexa HTTP Client - Jest Integration Examples', () => {
-  let client: ReturnType<typeof createHttpClient>;
-  let mockAdapter: MockAdapter;
+  let client: ReturnType<typeof createHttpClient>
+  let mockAdapter: MockAdapter
 
   beforeEach(() => {
     // Create a real HTTP client with a base URL for testing
-    client = createHttpClient({ baseURL: 'https://api.example.com' });
+    client = createHttpClient({ baseURL: 'https://api.example.com' })
     // Create a mock adapter for the client
-    mockAdapter = createMockClient(client);
-  });
+    mockAdapter = createMockClient(client)
+  })
 
   afterEach(() => {
     // Reset mock routes between tests
-    mockAdapter.reset();
+    mockAdapter.reset()
     // Clear Jest mocks
-      vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
   describe('Basic Mocking with Jest', () => {
     it('should mock GET requests with static data', async () => {
       // Arrange
-      const mockUsers = [{ id: 1, name: 'John' }, { id: 2, name: 'Jane' }];
-      mockAdapter.onGet('/users').reply(200, mockUsers);
+      const mockUsers = [
+        { id: 1, name: 'John' },
+        { id: 2, name: 'Jane' },
+      ]
+      mockAdapter.onGet('/users').reply(200, mockUsers)
 
       // Act
-      const result = await mockAdapter.client.get('/users');
+      const result = await mockAdapter.client.get('/users')
 
       // Assert
-      expect(result.ok).toBe(true);
+      expect(result.ok).toBe(true)
       if (result.ok) {
-        expect(result.value.data).toEqual(mockUsers);
-        expect(result.value.status).toBe(200);
+        expect(result.value.data).toEqual(mockUsers)
+        expect(result.value.status).toBe(200)
       }
-    });
+    })
 
     it('should mock error responses and verify error structure', async () => {
       // Arrange
-      mockAdapter.onGet('/not-found').reply(404, { error: 'Not Found' });
+      mockAdapter.onGet('/not-found').reply(404, { error: 'Not Found' })
 
       // Act
-      const result = await mockAdapter.client.get('/not-found');
+      const result = await mockAdapter.client.get('/not-found')
 
       // Assert
-      expect(result.ok).toBe(false);
+      expect(result.ok).toBe(false)
       if (!result.ok) {
-        expect(result.error.code).toBe('HTTP_ERROR');
-        expect(result.error.status).toBe(404);
-        expect(result.error.message).toContain('404');
+        expect(result.error.code).toBe('HTTP_ERROR')
+        expect(result.error.status).toBe(404)
+        expect(result.error.message).toContain('404')
       }
-    });
-  });
+    })
+  })
 
   describe('Mocking Network Errors', () => {
     it('should simulate network failures', async () => {
       // Arrange
-      mockAdapter.onGet('/unreachable').networkError('Connection refused');
+      mockAdapter.onGet('/unreachable').networkError('Connection refused')
 
       // Act
-      const result = await mockAdapter.client.get('/unreachable');
+      const result = await mockAdapter.client.get('/unreachable')
 
       // Assert
-      expect(result.ok).toBe(false);
+      expect(result.ok).toBe(false)
       if (!result.ok) {
         // The client converts network errors to NETWORK_ERROR code
-        expect(result.error.code).toBe('NETWORK_ERROR');
-        expect(result.error.message).toContain('Connection');
+        expect(result.error.code).toBe('NETWORK_ERROR')
+        expect(result.error.message).toContain('Connection')
       }
-    });
-  });
+    })
+  })
 
   describe('Testing with Jest Mocks', () => {
     it('should use Jest mocks to verify interceptor calls', async () => {
       // Arrange
       const requestInterceptor = vi.fn((config) => {
-        config.headers = { ...config.headers, 'X-Jest-Test': 'true' };
-        return config;
-      });
+        config.headers = { ...config.headers, 'X-Jest-Test': 'true' }
+        return config
+      })
 
-      mockAdapter.client.addRequestInterceptor({ onRequest: requestInterceptor });
+      mockAdapter.client.addRequestInterceptor({
+        onRequest: requestInterceptor,
+      })
 
-      mockAdapter.onGet('/jest-test').reply(200, { jest: true });
+      mockAdapter.onGet('/jest-test').reply(200, { jest: true })
 
       // Act
-      await mockAdapter.client.get('/jest-test');
+      await mockAdapter.client.get('/jest-test')
 
       // Assert
-      expect(requestInterceptor).toHaveBeenCalledTimes(1);
-      const interceptedConfig = requestInterceptor.mock.calls[0][0];
-      expect(interceptedConfig.headers['X-Jest-Test']).toBe('true');
-    });
+      expect(requestInterceptor).toHaveBeenCalledTimes(1)
+      const interceptedConfig = requestInterceptor.mock.calls[0][0]
+      expect(interceptedConfig.headers['X-Jest-Test']).toBe('true')
+    })
 
     it('should mock fetch directly for integration tests', async () => {
       // In some cases, you might want to mock global fetch instead of using MockAdapter
       // This example shows how to do that with Jest
-      
+
       // Save original fetch
-      const originalFetch = global.fetch;
-      
+      const originalFetch = global.fetch
+
       try {
         // Mock global fetch
         global.fetch = vi.fn().mockResolvedValue(
           new Response(JSON.stringify({ mocked: true }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
-          })
-        );
+          }),
+        )
 
         // Create a client that uses the mocked global fetch
-        const clientWithMockedFetch = createHttpClient();
-        
+        const clientWithMockedFetch = createHttpClient()
+
         // Act
-        const result = await clientWithMockedFetch.get('https://api.example.com/data');
-        
+        const result = await clientWithMockedFetch.get(
+          'https://api.example.com/data',
+        )
+
         // Assert
-        expect(global.fetch).toHaveBeenCalledTimes(1);
-        expect(result.ok).toBe(true);
+        expect(global.fetch).toHaveBeenCalledTimes(1)
+        expect(result.ok).toBe(true)
         if (result.ok) {
-          expect(result.value.data).toEqual({ mocked: true });
+          expect(result.value.data).toEqual({ mocked: true })
         }
       } finally {
         // Restore original fetch
-        global.fetch = originalFetch;
+        global.fetch = originalFetch
       }
-    });
-  });
+    })
+  })
 
   describe('Snapshot Testing', () => {
     it('should match response snapshots', async () => {
@@ -159,55 +166,59 @@ describe('Nexa HTTP Client - Jest Integration Examples', () => {
         nested: {
           value: 'deep',
         },
-      };
-      mockAdapter.onGet('/snapshot').reply(200, mockData);
+      }
+      mockAdapter.onGet('/snapshot').reply(200, mockData)
 
       // Act
-      const result = await mockAdapter.client.get('/snapshot');
+      const result = await mockAdapter.client.get('/snapshot')
 
       // Assert
-      expect(result.ok).toBe(true);
+      expect(result.ok).toBe(true)
       if (result.ok) {
         // Use Jest snapshot testing
-        expect(result.value.data).toMatchSnapshot();
+        expect(result.value.data).toMatchSnapshot()
       }
-    });
-  });
+    })
+  })
 
   describe('Testing Async Behavior', () => {
     it('should handle delayed responses', async () => {
       // Arrange
-      mockAdapter.onGet('/delayed').reply(200, { delayed: true }, { delay: 100 });
+      mockAdapter
+        .onGet('/delayed')
+        .reply(200, { delayed: true }, { delay: 100 })
 
       // Act & Assert - Should not timeout
-      const result = await mockAdapter.client.get('/delayed');
-      expect(result.ok).toBe(true);
-    });
+      const result = await mockAdapter.client.get('/delayed')
+      expect(result.ok).toBe(true)
+    })
 
     it('should timeout when delay exceeds client timeout', async () => {
       // This test requires a client with a short timeout
-      let mockCalled = false;
+      let mockCalled = false
       const fastClient = createHttpClient({
         baseURL: 'https://api.example.com',
-      });
-      const fastMock = createMockClient(fastClient);
-      
+      })
+      const fastMock = createMockClient(fastClient)
+
       // Mock with longer delay than client timeout
       fastMock.onGet('/slow').reply(() => {
-        mockCalled = true;
-        return { status: 200, data: { slow: true }, delay: 200 };
-      });
+        mockCalled = true
+        return { status: 200, data: { slow: true }, delay: 200 }
+      })
 
       // Act - Pass timeout directly in request config
-      const result = await fastMock.client.get('/slow', { timeout: 50 });
+      const result = await fastMock.client.get('/slow', { timeout: 50 })
 
       // Assert - Should timeout before mock completes
-      expect(result.ok).toBe(false);
-      expect(mockCalled).toBe(true); // Mock should have started (route matched)
+      expect(result.ok).toBe(false)
+      expect(mockCalled).toBe(true) // Mock should have started (route matched)
       if (!result.ok) {
         // Should be a timeout error (code TIMEOUT or ABORT_ERROR)
-        expect(['TIMEOUT', 'ABORT_ERROR', 'NETWORK_ERROR']).toContain(result.error.code);
+        expect(['TIMEOUT', 'ABORT_ERROR', 'NETWORK_ERROR']).toContain(
+          result.error.code,
+        )
       }
-    });
-  });
-});
+    })
+  })
+})

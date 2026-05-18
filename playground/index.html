@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexa DevTools Playground</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; }
+    .playground { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+    h1 { font-size: 2rem; margin-bottom: 8px; background: linear-gradient(135deg, #3178C6, #238636); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: #888; margin-bottom: 32px; }
+    .hint { background: #1a1a2e; border: 1px solid #2d2d44; border-radius: 8px; padding: 12px 16px; margin-bottom: 32px; font-size: 0.9rem; }
+    .hint kbd { background: #2d2d44; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
+    .section { margin-bottom: 24px; }
+    .section h2 { font-size: 1.2rem; margin-bottom: 12px; color: #3178C6; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn { padding: 10px 20px; border: 1px solid #2d2d44; border-radius: 8px; background: #1a1a2e; color: #e0e0e0; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+    .btn:hover { background: #2d2d44; border-color: #3178C6; }
+    .btn:active { transform: scale(0.98); }
+    .btn-success { border-color: #22c55e; color: #22c55e; }
+    .btn-success:hover { background: #1a2e1a; }
+    .btn-error { border-color: #ef4444; color: #ef4444; }
+    .btn-error:hover { background: #2e1a1a; }
+    .btn-warn { border-color: #f59e0b; color: #f59e0b; }
+    .btn-warn:hover { background: #2e2a1a; }
+    .status { margin-top: 16px; padding: 12px 16px; background: #1a1a2e; border-radius: 8px; font-family: monospace; font-size: 0.85rem; min-height: 40px; }
+    .status .ok { color: #22c55e; }
+    .status .err { color: #ef4444; }
+    .status .info { color: #3178C6; }
+  </style>
+</head>
+<body>
+  <div class="playground">
+    <h1>Nexa DevTools</h1>
+    <p class="subtitle">HTTP Client + Dev Overlay Playground</p>
+
+    <div class="hint">
+      Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd> to toggle the Dev Overlay
+    </div>
+
+    <div class="section">
+      <h2>Basic Requests</h2>
+      <div class="btn-group">
+        <button class="btn btn-success" id="btn-get">GET /users</button>
+        <button class="btn" id="btn-post">POST /posts</button>
+        <button class="btn btn-warn" id="btn-put">PUT /posts/1</button>
+        <button class="btn btn-warn" id="btn-patch">PATCH /posts/1</button>
+        <button class="btn btn-error" id="btn-delete">DELETE /posts/1</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Error Scenarios</h2>
+      <div class="btn-group">
+        <button class="btn btn-error" id="btn-404">404 Not Found</button>
+        <button class="btn btn-error" id="btn-500">500 Server Error</button>
+        <button class="btn btn-error" id="btn-timeout">Timeout (1ms)</button>
+        <button class="btn btn-error" id="btn-network">Network Error</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Features</h2>
+      <div class="btn-group">
+        <button class="btn" id="btn-cache">Cache (click 2x)</button>
+        <button class="btn" id="btn-retry">Retry (3 attempts)</button>
+        <button class="btn" id="btn-parallel">Parallel (5 requests)</button>
+        <button class="btn" id="btn-concurrent">Concurrent Limit (3)</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Dev Overlay</h2>
+      <div class="btn-group">
+        <button class="btn" id="btn-show">Show Overlay</button>
+        <button class="btn" id="btn-hide">Hide Overlay</button>
+        <button class="btn" id="btn-clear">Clear History</button>
+      </div>
+    </div>
+
+    <div class="status" id="status">Ready. Make a request to see results here.</div>
+  </div>
+
+  <script type="module" src="/main.ts"></script>
+</body>
+</html>

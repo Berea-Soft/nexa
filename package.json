@@ -1,6 +1,6 @@
 {
   "name": "@bereasoftware/nexa",
-  "version": "1.2.0",
+  "version": "1.0.4",
   "type": "module",
   "main": "./dist/nexa.cjs.js",
   "module": "./dist/nexa.es.js",
@@ -16,12 +16,6 @@
       "import": "./dist/nexa.es.js",
       "require": "./dist/nexa.cjs.js",
       "default": "./dist/nexa.umd.js"
-    },
-    "./testing": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/nexa.es.js",
-      "require": "./dist/nexa.cjs.js",
-      "default": "./dist/nexa.umd.js"
     }
   },
   "files": [
@@ -31,6 +25,7 @@
     "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
+  "packageManager": "pnpm@10.21.0",
   "keywords": [
     "http",
     "client",
@@ -53,8 +48,6 @@
   "author": "John Andrade <johnandrade@bereasoft.com>",
   "license": "MIT",
   "description": "Nexa is a TypeScript HTTP client library that combines the power of fetch with the convenience of axios, while adhering to SOLID principles. It provides a flexible and extensible API for making HTTP requests, handling retries, caching, and more.",
-  "about": "Nexa is designed to be a modern, type-safe HTTP client that simplifies the process of making API requests in TypeScript. It offers features such as request and response interceptors, automatic retries with exponential backoff, caching mechanisms, and a result type for better error handling. With support for both ESM and CommonJS, Nexa can be easily integrated into any TypeScript project.",
-  "homepage": "https://github.com/Berea-Soft/nexa",
   "maintainers": [
     {
       "name": "John Andrade",
@@ -79,32 +72,45 @@
     "> 1%"
   ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "vite --config playground/vite.config.ts",
+    "build": "tsc -p tsconfig.build.json && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "lint": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "benchmark": "node scripts/benchmark.mjs",
+    "prepare": "echo \"husky ready\"",
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.58.5",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.6",
     "@semantic-release/npm": "^13.1.5",
-    "@types/cookie-parser": "^1.4.10",
-    "@types/node": "^25.6.0",
-    "@vitest/coverage-v8": "^4.1.4",
-    "@vitest/ui": "^4.1.4",
+    "@types/node": "^25.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@vitest/coverage-v8": "^4.1.2",
+    "@vitest/ui": "^4.1.2",
+    "eslint": "^9.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
     "semantic-release": "^25.0.3",
-    "typescript": "~6.0.3",
-    "vite": "^8.0.8",
-    "vite-plugin-dts": "^4.5.4",
-    "vitest": "^4.1.4"
+    "typescript": "~6.0.2",
+    "vite": "^8.0.3",
+    "vitest": "^4.1.2"
   },
-  "dependencies": {
-    "npm": "^11.12.1"
-  }
+  "lint-staged": {
+    "*.ts": [
+      "prettier --write",
+      "eslint --fix --max-warnings=0"
+    ]
+  },
+  "dependencies": {}
 }

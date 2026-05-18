@@ -14,7 +14,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) before particip
 ### Prerequisites
 
 - Node.js 20 or later
-- npm 10 or later
+- pnpm 10 or later
 - TypeScript 6.0 or later
 
 ### Development Setup
@@ -22,12 +22,12 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) before particip
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/nexa.git
+   git clone https://github.com/Berea-Soft/nexa.git
    cd nexa
    ```
 3. **Install dependencies**:
    ```bash
-   npm install
+   pnpm install
    ```
 4. **Create a branch** for your feature or fix:
    ```bash
@@ -64,29 +64,36 @@ We use Vitest for testing. Run tests with:
 
 ```bash
 # Run all tests
-npm test
+pnpm test
 
 # Run tests in watch mode
-npm run test:watch
+pnpm test:watch
 
 # Run tests with UI
-npm run test:ui
+pnpm test:ui
 
 # Run tests with coverage
-npm run test:coverage
+pnpm test:coverage
 ```
 
 ### Type Checking
 
 ```bash
-npm run lint
+pnpm lint
 ```
 
 ### Building
 
 ```bash
-npm run build
+pnpm build
 ```
+
+### Releases and Publishing
+
+Releases are automated. Do not publish manually from local machines unless maintainers explicitly ask for it.
+
+- Package publication is handled by release automation after the appropriate branch workflow
+- Local contributor verification should use `pnpm test`, `pnpm lint`, and `pnpm build`
 
 This will generate the following files in `dist/`:
 - `nexa.es.js` (ESM)
