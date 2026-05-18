@@ -958,6 +958,8 @@ manager.register(rateLimitPlugin);
 
 Built-in visual development tool for debugging and monitoring HTTP requests in real-time.
 
+> API status: publicly available and intended for browser development flows. It is not designed for SSR or Node runtimes without a DOM.
+
 ```typescript
 import { createHttpClient, createDevOverlay } from "@bereasoftware/nexa";
 
@@ -1007,8 +1009,10 @@ createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevO
 **Behavior notes:**
 
 - `createDevOverlay()` is a singleton. Multiple calls reuse the same instance.
+- The overlay only mounts UI when a DOM is available. In SSR or Node you can import the module safely, but no panel is rendered.
 - `theme` is typed as `'dark' | 'light'`, but the current UI is primarily designed for dark mode.
 - The retry button uses direct `fetch()` for quick revalidation; it does not automatically replay interceptors or advanced `HttpClient` configuration.
+- `destroyDevOverlay()` clears the singleton instance, removes the panel, and unregisters the global listeners used by the overlay.
 
 **Note:** Advanced request options such as `transformRequest`, `credentials`, `withCredentials`, `debug`, `logger`, `transport`, `nodeOptions`, and `autoFormData` are already typed, but not all of them are fully wired into the main `HttpClient` pipeline in this release.
 
@@ -1033,6 +1037,13 @@ tracker.onChange((request) => {}) // Listen for new tracked requests
 getDevOverlay() // Get current { tracker, ui } or null if not created yet
 destroyDevOverlay() // Destroy the current singleton instance
 ```
+
+**When to use each export:**
+
+- `createDevOverlay()` creates or reuses the overlay and returns the `tracker` you pass into `createHttpClient({ devTracker })`.
+- `getDevOverlay()` lets you inspect the current instance without creating a new one.
+- `destroyDevOverlay()` is useful for full teardown during hot reloads, tests, or manual cleanup.
+- `RequestTracker` can be used on its own if you want request history and metrics without mounting the UI.
 
 **Exposed data shapes:**
 

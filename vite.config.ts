@@ -30,7 +30,6 @@ export default defineConfig({
       output: {
         banner,
         exports: "named" as const,
-        inlineDynamicImports: true,
       },
     },
     codeSplitting: false,

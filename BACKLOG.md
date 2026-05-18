@@ -1,6 +1,6 @@
 # Nexa Backlog
 
-## Milestone sugerido: v1.3.1
+## Milestone sugerido: v1.4.0
 
 ### P0
 
@@ -30,7 +30,7 @@
   Objetivo: decidir si el overlay es `experimental`, `stable` o estrictamente `dev-only`.
   Criterio de aceptación: la API pública del overlay queda definida y comunicada de forma explícita.
 
-- [ ] `ci: use frozen lockfile in GitHub Actions`
+- [x] `ci: use frozen lockfile in GitHub Actions`
   Objetivo: hacer instalaciones reproducibles en CI.
   Criterio de aceptación: el workflow usa `pnpm install --frozen-lockfile`.
 
@@ -38,7 +38,7 @@
   Objetivo: dejar claro si `release` debe correr o no con `workflow_dispatch`.
   Criterio de aceptación: la política de release queda implementada y documentada.
 
-- [ ] `docs(dev-overlay): document setup, scope and limitations`
+- [x] `docs(dev-overlay): document setup, scope and limitations`
   Objetivo: documentar cómo se usa el overlay, en qué entornos aplica y qué límites tiene.
   Criterio de aceptación: `README.md` y `README.en.md` incluyen sección del overlay.
 
@@ -46,7 +46,7 @@
   Objetivo: hacer visible la feature en docs y promoción.
   Criterio de aceptación: existe al menos una demo visual reutilizable.
 
-- [ ] `docs(api): clarify dev-overlay exports in public documentation`
+- [x] `docs(api): clarify dev-overlay exports in public documentation`
   Objetivo: documentar `createDevOverlay`, `getDevOverlay`, `destroyDevOverlay` y `RequestTracker`.
   Criterio de aceptación: la documentación explica propósito, uso esperado y alcance de esos exports.
 
@@ -80,7 +80,7 @@
   Objetivo: asegurar consistencia entre adapters Node y HTTP/2.
   Criterio de aceptación: hay pruebas para cancelación, timeout y errores importantes en HTTP/1.1.
 
-- [ ] `chore(build): remove deprecated Vite inlineDynamicImports config`
+- [x] `chore(build): remove deprecated Vite inlineDynamicImports config`
   Objetivo: eliminar warning de build y limpiar configuración redundante.
   Criterio de aceptación: `pnpm build` no muestra ese warning.
 
@@ -97,11 +97,11 @@
 
 ## Quick Wins
 
-- [ ] `ci: use frozen lockfile in GitHub Actions`
+- [x] `ci: use frozen lockfile in GitHub Actions`
 - [ ] `ci(release): decide and document manual release behavior`
-- [ ] `chore(build): remove deprecated Vite inlineDynamicImports config`
-- [ ] `docs(dev-overlay): document setup, scope and limitations`
-- [ ] `docs(api): clarify dev-overlay exports in public documentation`
+- [x] `chore(build): remove deprecated Vite inlineDynamicImports config`
+- [x] `docs(dev-overlay): document setup, scope and limitations`
+- [x] `docs(api): clarify dev-overlay exports in public documentation`
 - [ ] `docs(product): add overlay screenshot or gif`
 - [ ] `docs(product): strengthen Nexa positioning around observability and DX`
 - [ ] `chore(examples): add focused dev-overlay examples or demo page`
@@ -123,18 +123,18 @@
 
 ## Siguiente Release Recomendada
 
-### v1.3.1
+### v1.4.0
 
 - [x] `fix(dev-overlay): remove global listeners on destroy`
 - [x] `fix(dev-overlay): guard browser-only APIs for SSR and Node environments`
 - [x] `fix(dev-overlay): replace hardcoded repo asset path with inline or configurable icon`
 - [x] `test(dev-overlay): add tracker and lifecycle coverage`
-- [ ] `ci: use frozen lockfile in GitHub Actions`
-- [ ] `docs(dev-overlay): document setup, scope and limitations`
-- [ ] `docs(api): clarify dev-overlay exports in public documentation`
-- [ ] `chore(build): remove deprecated Vite inlineDynamicImports config`
+- [x] `ci: use frozen lockfile in GitHub Actions`
+- [x] `docs(dev-overlay): document setup, scope and limitations`
+- [x] `docs(api): clarify dev-overlay exports in public documentation`
+- [x] `chore(build): remove deprecated Vite inlineDynamicImports config`
 
-### v1.4.0+
+### v1.4.1+
 
 - [ ] `refactor(esm): normalize root exports to explicit ESM-compatible paths`
 - [ ] `design(api): define dev-overlay stability and public support level`

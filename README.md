@@ -1295,6 +1295,8 @@ manager.register(rateLimitPlugin);
 
 Herramienta visual de desarrollo integrada para depurar y monitorear requests HTTP en tiempo real.
 
+> Estado de API: disponible públicamente y pensada para flujos de desarrollo en navegador. No está orientada a entornos SSR o Node sin DOM.
+
 ```typescript
 import { createHttpClient, createDevOverlay } from "@bereasoftware/nexa";
 
@@ -1344,8 +1346,10 @@ createDevOverlay(config?: DevOverlayConfig): { tracker: RequestTracker; ui: DevO
 **Notas de comportamiento:**
 
 - `createDevOverlay()` es singleton. Si lo llamas varias veces, reutiliza la misma instancia.
+- El overlay solo monta UI cuando hay DOM disponible. En SSR o Node puedes importar el módulo sin romper el proceso, pero no se renderiza panel.
 - `theme` está tipado como `'dark' | 'light'`, pero la UI actual está diseñada principalmente para tema oscuro.
 - El botón de retry del panel usa `fetch()` directo para revalidación rápida; no reaplica automáticamente interceptores ni configuración avanzada del `HttpClient`.
+- `destroyDevOverlay()` limpia la instancia singleton, desmonta el panel y remueve listeners globales registrados por el overlay.
 
 **Métodos del UI:**
 
@@ -1368,6 +1372,13 @@ tracker.onChange((request) => {}) // Escuchar nuevos requests
 getDevOverlay() // Obtener { tracker, ui } actuales o null si no existen
 destroyDevOverlay() // Destruir la instancia singleton actual
 ```
+
+**Cuándo usar cada export:**
+
+- `createDevOverlay()` crea o reutiliza el overlay y devuelve el `tracker` que debes pasar a `createHttpClient({ devTracker })`.
+- `getDevOverlay()` te permite consultar la instancia actual sin crear una nueva.
+- `destroyDevOverlay()` sirve para cerrar completamente la herramienta en hot reloads, tests o limpieza manual.
+- `RequestTracker` puede usarse por separado si quieres recolectar historial y métricas sin montar la UI.
 
 **Estructuras expuestas:**
 
