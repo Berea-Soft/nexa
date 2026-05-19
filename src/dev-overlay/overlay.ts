@@ -835,6 +835,7 @@ export class DevOverlayUI {
     if (this.config.enabled && canShowFloating) {
       this.createFloatingIcon()
     }
+    this.updateHeaderActionsVisibility()
     this.hide()
 
     this.globalKeyboardHandler = (e: KeyboardEvent) => {
@@ -1031,6 +1032,23 @@ export class DevOverlayUI {
     el.querySelector('[data-count="requests"]')!.textContent = String(
       m.totalRequests,
     )
+    this.updateHeaderActionsVisibility()
+  }
+
+  private updateHeaderActionsVisibility(): void {
+    const history = this.tracker.getHistory()
+    const hasData = history.length > 0
+    const exportBtn = this.panel?.querySelector(
+      '.nexa-btn-export',
+    ) as HTMLElement
+    const clearBtn = this.panel?.querySelector('.nexa-btn-clear') as HTMLElement
+
+    if (exportBtn) {
+      exportBtn.style.display = hasData ? 'flex' : 'none'
+    }
+    if (clearBtn) {
+      clearBtn.style.display = hasData ? 'flex' : 'none'
+    }
   }
 
   private renderRequestList(): void {
