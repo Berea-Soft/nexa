@@ -1,3 +1,11 @@
+# [1.6.0](https://github.com/Berea-Soft/nexa/compare/v1.5.0...v1.6.0) (2026-05-19)
+
+
+### Features
+
+* **ci:** allow manual triggering of release job with workflow_dispatch ([b387d0e](https://github.com/Berea-Soft/nexa/commit/b387d0ea60f063a3c9bb6081692bb9124e592392))
+* **dev-overlay:** enhance overlay with branding, icon customization, and filter functionality ([93e0245](https://github.com/Berea-Soft/nexa/commit/93e0245947e08bd827a82d77b58124248b23f6c3))
+
 # [1.5.0](https://github.com/Berea-Soft/nexa/compare/v1.4.1...v1.5.0) (2026-05-18)
 
 
