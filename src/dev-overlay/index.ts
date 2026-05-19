@@ -19,6 +19,8 @@ export const defaultDevOverlayConfig: DevOverlayConfig = {
   floatingButtonSize: 48,
   floatingButtonOffset: 24,
   floatingButtonTheme: 'inherit',
+  branding: 'Nexa DevTools',
+  icon: 'https://raw.githubusercontent.com/Berea-Soft/nexa/refs/heads/main/src/assets/faviconNew.png',
 }
 
 /**

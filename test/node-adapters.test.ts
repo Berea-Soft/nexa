@@ -118,16 +118,29 @@ runNodeTests('Node.js HTTP Adapters', () => {
       // Use a very short timeout
       const options: NodeTransportOptions = { timeout: 10 } // 10ms timeout
       try {
-        // Note: nodeHttpAdapter signature expects (input, init?, options?)
-        // but the actual signature is (input, init?, transportOptions?)
         await nodeHttpAdapter(`${baseUrl}/slow`, { method: 'GET' }, options)
-        // Should not reach here
         expect(true).toBe(false)
       } catch (error: any) {
-        // Expect timeout error
         expect(error.message.toLowerCase()).toContain('timed out')
       }
     }, 5000)
+
+    it('should handle AbortSignal', async () => {
+      const controller = new AbortController()
+      const promise = nodeHttpAdapter(`${baseUrl}/slow`, {
+        method: 'GET',
+        signal: controller.signal,
+      })
+
+      setTimeout(() => controller.abort(), 20)
+
+      try {
+        await promise
+        expect(true).toBe(false)
+      } catch (error: any) {
+        expect(error.name).toBe('AbortError')
+      }
+    })
   })
 
   describe('nodeHttp2Adapter', () => {
@@ -150,6 +163,16 @@ runNodeTests('Node.js HTTP Adapters', () => {
               'content-type': 'application/json',
             })
             stream.end(JSON.stringify({ success: true, protocol: 'h2' }))
+            return
+          }
+
+          if (path === '/slow') {
+            setTimeout(() => {
+              if (!stream.closed) {
+                stream.respond({ ':status': 200 })
+                stream.end(JSON.stringify({ slow: true }))
+              }
+            }, 100)
             return
           }
 
@@ -193,6 +216,36 @@ runNodeTests('Node.js HTTP Adapters', () => {
       expect(response.ok).toBe(true)
       const data = await response.json()
       expect(data).toEqual({ success: true, protocol: 'h2' })
+    })
+
+    it('should respect timeout in HTTP/2', async () => {
+      try {
+        await nodeHttp2Adapter(
+          `${baseUrl}/slow`,
+          { method: 'GET' },
+          { timeout: 10 },
+        )
+        expect(true).toBe(false)
+      } catch (error: any) {
+        expect(error.message.toLowerCase()).toContain('timed out')
+      }
+    })
+
+    it('should handle AbortSignal in HTTP/2', async () => {
+      const controller = new AbortController()
+      const promise = nodeHttp2Adapter(`${baseUrl}/slow`, {
+        method: 'GET',
+        signal: controller.signal,
+      })
+
+      setTimeout(() => controller.abort(), 20)
+
+      try {
+        await promise
+        expect(true).toBe(false)
+      } catch (error: any) {
+        expect(error.name).toBe('AbortError')
+      }
     })
   })
 })

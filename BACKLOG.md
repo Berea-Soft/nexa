@@ -22,7 +22,7 @@
 
 ### P1
 
-- [ ] `refactor(esm): normalize root exports to explicit ESM-compatible paths`
+- [x] `refactor(esm): normalize root exports to explicit ESM-compatible paths`
   Objetivo: unificar el patrón de imports/exports del proyecto.
   Criterio de aceptación: `src/index.ts` y los submódulos siguen una convención consistente y estable.
 
@@ -56,27 +56,27 @@
 
 ### P2
 
-- [ ] `feat(dev-overlay): persist panel state and preferences`
+- [x] `feat(dev-overlay): persist panel state and preferences`
   Objetivo: recordar visibilidad, posición o preferencias básicas.
   Criterio de aceptación: el overlay conserva estado útil entre sesiones o recreaciones.
 
-- [ ] `feat(dev-overlay): add copy-as-fetch and export history actions`
+- [x] `feat(dev-overlay): add copy-as-fetch and export history actions`
   Objetivo: mejorar el valor del overlay como herramienta de debugging.
   Criterio de aceptación: se pueden reutilizar requests fuera del overlay.
 
-- [ ] `feat(dev-overlay): allow configurable branding or icon customization`
+- [x] `feat(dev-overlay): allow configurable branding or icon customization`
   Objetivo: evitar branding rígido y facilitar integración en distintos proyectos.
   Criterio de aceptación: el overlay permite configurar o sustituir su icono/identidad visual.
 
-- [ ] `feat(dev-overlay): improve filter model with status and time-based views`
+- [x] `feat(dev-overlay): improve filter model with status and time-based views`
   Objetivo: hacer el overlay más útil en flujos con mucho tráfico.
   Criterio de aceptación: se puede filtrar de forma más precisa por categorías relevantes.
 
-- [ ] `test(http2): expand error and abort coverage for node adapters`
+- [x] `test(http2): expand error and abort coverage for node adapters`
   Objetivo: cubrir mejor cancelación, timeout y errores de stream en HTTP/2.
   Criterio de aceptación: existen pruebas específicas para esos escenarios.
 
-- [ ] `test(node-adapters): expand coverage for abort and timeout behavior in HTTP/1.1`
+- [x] `test(node-adapters): expand coverage for abort and timeout behavior in HTTP/1.1`
   Objetivo: asegurar consistencia entre adapters Node y HTTP/2.
   Criterio de aceptación: hay pruebas para cancelación, timeout y errores importantes en HTTP/1.1.
 
@@ -84,7 +84,7 @@
   Objetivo: eliminar warning de build y limpiar configuración redundante.
   Criterio de aceptación: `pnpm build` no muestra ese warning.
 
-- [ ] `chore(examples): add focused dev-overlay examples or demo page`
+- [x] `chore(examples): add focused dev-overlay examples or demo page`
   Objetivo: mostrar el overlay en un flujo fácil de probar y compartir.
   Criterio de aceptación: existe un ejemplo reproducible que demuestre el overlay.
 
@@ -104,7 +104,7 @@
 - [x] `docs(api): clarify dev-overlay exports in public documentation`
 - [x] `docs(product): add overlay screenshot or gif`
 - [x] `docs(product): strengthen Nexa positioning around observability and DX`
-- [ ] `chore(examples): add focused dev-overlay examples or demo page`
+- [x] `chore(examples): add focused dev-overlay examples or demo page`
 
 ## Cambios Estructurales
 
@@ -112,14 +112,14 @@
 - [x] `fix(dev-overlay): guard browser-only APIs for SSR and Node environments`
 - [x] `fix(dev-overlay): replace hardcoded repo asset path with inline or configurable icon`
 - [x] `test(dev-overlay): add tracker and lifecycle coverage`
-- [ ] `refactor(esm): normalize root exports to explicit ESM-compatible paths`
+- [x] `refactor(esm): normalize root exports to explicit ESM-compatible paths`
 - [x] `design(api): define dev-overlay stability and public support level`
-- [ ] `feat(dev-overlay): persist panel state and preferences`
-- [ ] `feat(dev-overlay): add copy-as-fetch and export history actions`
-- [ ] `feat(dev-overlay): allow configurable branding or icon customization`
-- [ ] `feat(dev-overlay): improve filter model with status and time-based views`
-- [ ] `test(http2): expand error and abort coverage for node adapters`
-- [ ] `test(node-adapters): expand coverage for abort and timeout behavior in HTTP/1.1`
+- [x] `feat(dev-overlay): persist panel state and preferences`
+- [x] `feat(dev-overlay): add copy-as-fetch and export history actions`
+- [x] `feat(dev-overlay): allow configurable branding or icon customization`
+- [x] `feat(dev-overlay): improve filter model with status and time-based views`
+- [x] `test(http2): expand error and abort coverage for node adapters`
+- [x] `test(node-adapters): expand coverage for abort and timeout behavior in HTTP/1.1`
 
 ## Siguiente Release Recomendada
 
@@ -136,11 +136,11 @@
 
 ### v1.4.1+
 
-- [ ] `refactor(esm): normalize root exports to explicit ESM-compatible paths`
+- [x] `refactor(esm): normalize root exports to explicit ESM-compatible paths`
 - [x] `design(api): define dev-overlay stability and public support level`
-- [ ] `feat(dev-overlay): persist panel state and preferences`
-- [ ] `feat(dev-overlay): add copy-as-fetch and export history actions`
-- [ ] `feat(dev-overlay): allow configurable branding or icon customization`
-- [ ] `feat(dev-overlay): improve filter model with status and time-based views`
-- [ ] `test(http2): expand error and abort coverage for node adapters`
-- [ ] `test(node-adapters): expand coverage for abort and timeout behavior in HTTP/1.1`
+- [x] `feat(dev-overlay): persist panel state and preferences`
+- [x] `feat(dev-overlay): add copy-as-fetch and export history actions`
+- [x] `feat(dev-overlay): allow configurable branding or icon customization`
+- [x] `feat(dev-overlay): improve filter model with status and time-based views`
+- [x] `test(http2): expand error and abort coverage for node adapters`
+- [x] `test(node-adapters): expand coverage for abort and timeout behavior in HTTP/1.1`

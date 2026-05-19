@@ -90,6 +90,17 @@ function createPanelElement() {
   const metricsTab = new MockElement()
   const requestsPanel = new MockElement()
   const metricsPanel = new MockElement()
+  const exportButton = new MockElement()
+  const copyButton = new MockElement()
+  const settingsButton = new MockElement()
+  const saveButton = new MockElement()
+  const cancelButton = new MockElement()
+  const filterChips = [
+    new MockElement(),
+    new MockElement(),
+    new MockElement(),
+    new MockElement(),
+  ]
 
   requestsTab.dataset.tab = 'requests'
   metricsTab.dataset.tab = 'metrics'
@@ -98,6 +109,11 @@ function createPanelElement() {
   panel.registerSelector('.nexa-btn-clear', clearButton)
   panel.registerSelector('.nexa-btn-back', backButton)
   panel.registerSelector('.nexa-btn-retry', retryButton)
+  panel.registerSelector('.nexa-btn-export', exportButton)
+  panel.registerSelector('.nexa-btn-copy', copyButton)
+  panel.registerSelector('.nexa-btn-settings', settingsButton)
+  panel.registerSelector('.nexa-btn-save', saveButton)
+  panel.registerSelector('.nexa-btn-cancel', cancelButton)
   panel.registerSelector('.nexa-search-input', searchInput)
   panel.registerSelector('.nexa-request-list', requestList)
   panel.registerSelector('.nexa-metrics-content', metricsContent)
@@ -112,8 +128,10 @@ function createPanelElement() {
   panel.registerSelector('[data-count="requests"]', requestCount)
   panel.registerSelector('[data-panel="requests"]', requestsPanel)
   panel.registerSelector('[data-panel="metrics"]', metricsPanel)
+  panel.registerSelector('.nexa-notification', new MockElement())
   panel.registerCollection('.nexa-tab', [requestsTab, metricsTab])
   panel.registerCollection('.nexa-panel', [requestsPanel, metricsPanel])
+  panel.registerCollection('.nexa-filter-chip', filterChips)
 
   return panel
 }

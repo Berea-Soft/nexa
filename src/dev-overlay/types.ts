@@ -43,4 +43,8 @@ export interface DevOverlayConfig {
   floatingButtonOffset?: number
   /** Theme for the floating button. 'inherit' uses overlay theme. Default 'inherit' */
   floatingButtonTheme?: 'inherit' | 'dark' | 'light'
+  /** Branding name shown in the header. Default 'Nexa DevTools' */
+  branding?: string
+  /** URL or base64 for the logo icon. */
+  icon?: string
 }

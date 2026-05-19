@@ -45,6 +45,10 @@ export class RequestTracker {
       floatingButtonSize: config.floatingButtonSize ?? 48,
       floatingButtonOffset: config.floatingButtonOffset ?? 24,
       floatingButtonTheme: config.floatingButtonTheme ?? 'inherit',
+      branding: config.branding ?? 'Nexa DevTools',
+      icon:
+        config.icon ??
+        'https://raw.githubusercontent.com/Berea-Soft/nexa/refs/heads/main/src/assets/faviconNew.png',
     }
   }
 

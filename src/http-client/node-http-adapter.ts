@@ -295,12 +295,16 @@ export async function nodeHttpAdapter(
     if (signal) {
       if (signal.aborted) {
         req.destroy()
-        reject(new Error('Request aborted'))
+        const err = new Error('Request aborted')
+        err.name = 'AbortError'
+        reject(err)
         return
       }
       const onAbort = () => {
         req.destroy()
-        reject(new Error('Request aborted'))
+        const err = new Error('Request aborted')
+        err.name = 'AbortError'
+        reject(err)
       }
       signal.addEventListener('abort', onAbort)
       // Clean up listener when request completes or errors
@@ -311,7 +315,9 @@ export async function nodeHttpAdapter(
 
     req.setTimeout(options?.timeout ?? 60000, () => {
       req.destroy()
-      reject(new Error('Request timed out'))
+      const err = new Error('Request timed out')
+      err.name = 'TimeoutError'
+      reject(err)
     })
 
     req.on('response', async (res) => {
@@ -383,7 +389,9 @@ export async function nodeHttp2Adapter(
 
       // Handle abort signal before making request
       if (signal?.aborted) {
-        cleanupAndReject(new Error('Request aborted'))
+        const err = new Error('Request aborted')
+        err.name = 'AbortError'
+        cleanupAndReject(err)
         return
       }
 
@@ -397,7 +405,9 @@ export async function nodeHttp2Adapter(
       if (options?.timeout) {
         req.setTimeout(options.timeout, () => {
           req.close()
-          cleanupAndReject(new Error('Request timed out'))
+          const err = new Error('Request timed out')
+          err.name = 'TimeoutError'
+          cleanupAndReject(err)
         })
       }
 
@@ -405,7 +415,9 @@ export async function nodeHttp2Adapter(
       if (signal) {
         const onAbort = () => {
           req.close()
-          cleanupAndReject(new Error('Request aborted'))
+          const err = new Error('Request aborted')
+          err.name = 'AbortError'
+          cleanupAndReject(err)
         }
         signal.addEventListener('abort', onAbort)
         // Clean up listener when request completes or errors

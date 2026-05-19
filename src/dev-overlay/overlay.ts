@@ -13,6 +13,8 @@ const ICONS = {
   search: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>`,
   clock: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`,
   zap: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  download: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+  copy: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`,
 }
 
 const COLORS = {
@@ -165,6 +167,34 @@ const STYLES = `
     box-shadow: 0 0 0 3px ${COLORS.accentSoft};
   }
   #nexa-dev-overlay .nexa-search-input::placeholder { color: ${COLORS.textDim}; }
+  #nexa-dev-overlay .nexa-filters {
+    display: flex;
+    gap: 6px;
+    padding: 12px 16px 12px 16px;
+    border-bottom: 1px solid ${COLORS.border};
+    overflow-x: auto;
+    scrollbar-width: none;
+    min-height: 50px;
+  }
+  #nexa-dev-overlay .nexa-filters::-webkit-scrollbar { display: none; }
+  #nexa-dev-overlay .nexa-filter-chip {
+    padding: 4px 10px;
+    background: ${COLORS.bgSurface};
+    border: 1px solid ${COLORS.border};
+    border-radius: 20px;
+    color: ${COLORS.textDim};
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  #nexa-dev-overlay .nexa-filter-chip:hover { border-color: ${COLORS.borderFocus}; color: ${COLORS.textMuted}; }
+  #nexa-dev-overlay .nexa-filter-chip-active {
+    background: ${COLORS.accentSoft};
+    border-color: ${COLORS.accent};
+    color: ${COLORS.accent};
+  }
   #nexa-dev-overlay .nexa-tabs {
     display: flex;
     gap: 4px;
@@ -305,6 +335,10 @@ const STYLES = `
     justify-content: space-between;
     margin-bottom: 16px;
   }
+  #nexa-dev-overlay .nexa-btn-group {
+    display: flex;
+    gap: 8px;
+  }
   #nexa-dev-overlay .nexa-btn {
     display: flex;
     align-items: center;
@@ -322,6 +356,8 @@ const STYLES = `
   #nexa-dev-overlay .nexa-btn:hover { background: rgba(53, 80, 122, 0.24); color: ${COLORS.text}; }
   #nexa-dev-overlay .nexa-btn-retry { background: ${COLORS.successBg}; border-color: transparent; color: ${COLORS.success}; }
   #nexa-dev-overlay .nexa-btn-retry:hover { background: ${COLORS.success}; color: #052e26; }
+  #nexa-dev-overlay .nexa-btn-copy { background: ${COLORS.accentSoft}; border-color: transparent; color: ${COLORS.accent}; }
+  #nexa-dev-overlay .nexa-btn-copy:hover { background: ${COLORS.accent}; color: #ffffff; }
   #nexa-dev-overlay .nexa-card {
     background: ${COLORS.bgSurface};
     border: 1px solid ${COLORS.border};
@@ -336,6 +372,28 @@ const STYLES = `
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 12px;
+  }
+  #nexa-dev-overlay .nexa-notification {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: ${COLORS.bgElevated};
+    color: ${COLORS.text};
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid ${COLORS.borderFocus};
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+    z-index: 2147483651;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #nexa-dev-overlay .nexa-notification-show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
   #nexa-dev-overlay .nexa-row {
     display: flex;
@@ -373,7 +431,6 @@ const STYLES = `
     flex-direction: column;
     gap: 12px;
   }
-  /* Settings modal (overlays the content area without shifting layout) */
   #nexa-dev-overlay .nexa-settings-panel {
     position: absolute;
     top: 72px;
@@ -413,7 +470,8 @@ const STYLES = `
   #nexa-dev-overlay.nexa-theme-light .nexa-request-item,
   #nexa-dev-overlay.nexa-theme-light .nexa-btn,
   #nexa-dev-overlay.nexa-theme-light .nexa-card,
-  #nexa-dev-overlay.nexa-theme-light .nexa-settings-panel {
+  #nexa-dev-overlay.nexa-theme-light .nexa-settings-panel,
+  #nexa-dev-overlay.nexa-theme-light .nexa-notification {
     background: #ffffff;
     border-color: #d8e4f2;
   }
@@ -433,8 +491,13 @@ const STYLES = `
   #nexa-dev-overlay.nexa-theme-light .nexa-empty,
   #nexa-dev-overlay.nexa-theme-light .nexa-empty span,
   #nexa-dev-overlay.nexa-theme-light .nexa-row span,
-  #nexa-dev-overlay.nexa-theme-light .nexa-settings-row label {
+  #nexa-dev-overlay.nexa-theme-light .nexa-settings-row label,
+  #nexa-dev-overlay.nexa-theme-light .nexa-notification {
     color: #64748b;
+  }
+  #nexa-dev-overlay.nexa-theme-light .nexa-notification {
+    box-shadow: 0 12px 32px rgba(15,23,42,0.12);
+    border-color: #e2e8f0;
   }
   #nexa-dev-overlay.nexa-theme-light .nexa-url,
   #nexa-dev-overlay.nexa-theme-light .nexa-empty p,
@@ -478,6 +541,13 @@ const STYLES = `
     align-items: center;
     gap: 8px;
   }
+  #nexa-dev-overlay.nexa-view-detail .nexa-metrics-bar,
+  #nexa-dev-overlay.nexa-view-detail .nexa-search,
+  #nexa-dev-overlay.nexa-view-detail .nexa-filters,
+  #nexa-dev-overlay.nexa-view-detail .nexa-tabs,
+  #nexa-dev-overlay.nexa-view-detail .nexa-body {
+    display: none !important;
+  }
 `
 
 function isDevelopmentEnv(): boolean {
@@ -512,6 +582,7 @@ export class DevOverlayUI {
   private selectedRequest: TrackedRequest | null = null
   private config: Required<DevOverlayConfig>
   private searchQuery = ''
+  private filterType: 'all' | 'xhr' | 'fetch' | 'err' | 'slow' = 'all'
   private removeTrackerListener: (() => void) | null = null
   private keyboardShortcutHandler: ((e: KeyboardEvent) => void) | null = null
   private globalKeyboardHandler: ((e: KeyboardEvent) => void) | null = null
@@ -651,6 +722,11 @@ export class DevOverlayUI {
     const isRight = pos.includes('right')
     const offsetPx = `${this.config.floatingButtonOffset ?? 24}px`
 
+    const branding = this.config.branding || 'Nexa DevTools'
+    const icon =
+      this.config.icon ||
+      'https://raw.githubusercontent.com/Berea-Soft/nexa/refs/heads/main/src/assets/faviconNew.png'
+
     this.panel.style.cssText = `
       position: fixed;
       ${isBottom ? `bottom: ${offsetPx};` : `top: ${offsetPx};`}
@@ -662,22 +738,24 @@ export class DevOverlayUI {
       flex-direction: column;
       overflow: hidden;
     `
-
     this.panel.innerHTML = `<style>${STYLES}</style>
 
       <div class="nexa-header">
         <div class="nexa-header-left">
           <div class="nexa-logo">
-            <img src="https://raw.githubusercontent.com/Berea-Soft/nexa/refs/heads/main/src/assets/faviconNew.png" alt="Nexa" style="width:100%;height:auto;object-fit:cover;border-radius:8px;display:block;" />
+            <img src="${icon}" alt="${branding}" style="width:100%;height:auto;object-fit:cover;border-radius:8px;display:block;" />
           </div>
-          <span class="nexa-title">Nexa DevTools</span>
+          <span class="nexa-title">${branding}</span>
         </div>
         <div class="nexa-header-actions">
-                  <button class="nexa-icon-btn nexa-btn-settings" title="Settings">${ICONS.gear}</button>
+          <button class="nexa-icon-btn nexa-btn-export" title="Export history (JSON)">${ICONS.download}</button>
+          <button class="nexa-icon-btn nexa-btn-settings" title="Settings">${ICONS.gear}</button>
           <button class="nexa-icon-btn nexa-btn-clear" title="Clear history">${ICONS.clear}</button>
           <button class="nexa-icon-btn nexa-btn-close" title="Close (Esc)">${ICONS.close}</button>
         </div>
       </div>
+
+      <div class="nexa-notification"></div>
 
       <div class="nexa-settings-panel" style="display:none">
         <div class="nexa-settings-row">
@@ -715,6 +793,13 @@ export class DevOverlayUI {
         <input type="text" class="nexa-search-input" placeholder="Filter by URL, method, or status..." />
       </div>
 
+      <div class="nexa-filters">
+        <div class="nexa-filter-chip nexa-filter-chip-active" data-filter="all">All</div>
+        <div class="nexa-filter-chip" data-filter="err">Errors</div>
+        <div class="nexa-filter-chip" data-filter="xhr">JSON</div>
+        <div class="nexa-filter-chip" data-filter="slow">Slow</div>
+      </div>
+
       <div class="nexa-tabs">
         <button class="nexa-tab nexa-tab-active" data-tab="requests"><span>Requests</span><span class="nexa-tab-count" data-count="requests">0</span></button>
         <button class="nexa-tab" data-tab="metrics"><span>Metrics</span></button>
@@ -728,7 +813,10 @@ export class DevOverlayUI {
       <div class="nexa-detail" style="display:none">
         <div class="nexa-detail-header">
           <button class="nexa-btn nexa-btn-back">${ICONS.back} Back</button>
-          <button class="nexa-btn nexa-btn-retry">${ICONS.retry} Retry</button>
+          <div class="nexa-btn-group">
+            <button class="nexa-btn nexa-btn-copy">${ICONS.copy} Copy as fetch</button>
+            <button class="nexa-btn nexa-btn-retry">${ICONS.retry} Retry</button>
+          </div>
         </div>
         <div class="nexa-detail-body"></div>
       </div>
@@ -778,6 +866,12 @@ export class DevOverlayUI {
       .querySelector('.nexa-btn-close')
       ?.addEventListener('click', () => this.hide())
     this.panel
+      .querySelector('.nexa-btn-export')
+      ?.addEventListener('click', () => this.exportHistory())
+    this.panel
+      .querySelector('.nexa-btn-copy')
+      ?.addEventListener('click', () => this.copyAsFetch())
+    this.panel
       .querySelector('.nexa-btn-clear')
       ?.addEventListener('click', () => {
         this.tracker.clear()
@@ -796,6 +890,22 @@ export class DevOverlayUI {
     searchInput?.addEventListener('input', (e) => {
       this.searchQuery = (e.target as HTMLInputElement).value.toLowerCase()
       this.renderRequestList()
+    })
+
+    this.panel.querySelectorAll('.nexa-filter-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        this.panel!.querySelectorAll('.nexa-filter-chip').forEach((c) =>
+          c.classList.remove('nexa-filter-chip-active'),
+        )
+        ;(chip as HTMLElement).classList.add('nexa-filter-chip-active')
+        this.filterType = (chip as HTMLElement).dataset.filter as
+          | 'all'
+          | 'xhr'
+          | 'fetch'
+          | 'err'
+          | 'slow'
+        this.renderRequestList()
+      })
     })
 
     this.panel.querySelectorAll('.nexa-tab').forEach((tab) => {
@@ -930,6 +1040,23 @@ export class DevOverlayUI {
     }
 
     let requests = this.tracker.getHistory()
+
+    if (this.filterType === 'err') {
+      requests = requests.filter((r) => !r.ok)
+    } else if (this.filterType === 'xhr') {
+      // JSON requests
+      requests = requests.filter(
+        (r) =>
+          (r.headers['content-type'] &&
+            r.headers['content-type'].includes('json')) ||
+          (r.responseHeaders &&
+            r.responseHeaders['content-type'] &&
+            r.responseHeaders['content-type'].includes('json')),
+      )
+    } else if (this.filterType === 'slow') {
+      requests = requests.filter((r) => r.duration > 500)
+    }
+
     if (this.searchQuery) {
       requests = requests.filter(
         (r) =>
@@ -1033,15 +1160,19 @@ export class DevOverlayUI {
 
   private showDetail(request: TrackedRequest): void {
     this.selectedRequest = request
-    const body = this.panel?.querySelector('.nexa-body') as HTMLElement | null
-    const detail = this.panel?.querySelector(
+    if (!this.panel) {
+      return
+    }
+    const body = this.panel.querySelector('.nexa-body') as HTMLElement | null
+    const detail = this.panel.querySelector(
       '.nexa-detail',
     ) as HTMLElement | null
-    const content = this.panel?.querySelector('.nexa-detail-body')
+    const content = this.panel.querySelector('.nexa-detail-body')
     if (!body || !detail || !content) {
       return
     }
 
+    this.panel.classList.add('nexa-view-detail')
     body.style.display = 'none'
     detail.style.display = 'flex'
 
@@ -1079,6 +1210,9 @@ export class DevOverlayUI {
   }
 
   private showMainView(): void {
+    if (this.panel) {
+      this.panel.classList.remove('nexa-view-detail')
+    }
     const body = this.panel?.querySelector('.nexa-body') as HTMLElement | null
     const detail = this.panel?.querySelector(
       '.nexa-detail',
@@ -1115,6 +1249,61 @@ export class DevOverlayUI {
         }
       })
       .catch(() => {})
+  }
+
+  private exportHistory(): void {
+    const history = this.tracker.getHistory()
+    const data = JSON.stringify(history, null, 2)
+    const blob = new Blob([data], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `nexa-history-${new Date().toISOString().slice(0, 19).replace(/[:]/g, '-')}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    this.showNotification('History exported as JSON')
+  }
+
+  private copyAsFetch(): void {
+    if (!this.selectedRequest) {
+      return
+    }
+    const r = this.selectedRequest
+    const headers = { ...r.headers }
+    delete headers['host'] // often not needed/allowed in manual fetch
+
+    let code = `fetch("${r.url}", {\n`
+    code += `  "method": "${r.method}",\n`
+    if (Object.keys(headers).length > 0) {
+      code += `  "headers": ${JSON.stringify(headers, null, 4).replace(/\n/g, '\n  ')},\n`
+    }
+    if (r.body) {
+      code += `  "body": ${JSON.stringify(r.body, null, 4).replace(/\n/g, '\n  ')},\n`
+    }
+    code += `});`
+
+    navigator.clipboard
+      .writeText(code)
+      .then(() => {
+        this.showNotification('Copied as fetch to clipboard')
+      })
+      .catch(() => {
+        this.showNotification('Failed to copy to clipboard')
+      })
+  }
+
+  private showNotification(message: string): void {
+    const el = this.panel?.querySelector('.nexa-notification') as HTMLElement
+    if (!el) {
+      return
+    }
+    el.textContent = message
+    el.classList.add('nexa-notification-show')
+    setTimeout(() => {
+      el.classList.remove('nexa-notification-show')
+    }, 2500)
   }
 
   private truncateUrl(url: string, max = 35): string {
@@ -1192,6 +1381,11 @@ export class DevOverlayUI {
       border = '1px solid #d8e4f2'
     }
 
+    const branding = this.config.branding || 'Nexa DevTools'
+    const icon =
+      this.config.icon ||
+      'https://raw.githubusercontent.com/Berea-Soft/nexa/refs/heads/main/src/assets/faviconNew.png'
+
     btn.style.cssText = `
       position: fixed;
       ${posStyles}
@@ -1211,7 +1405,7 @@ export class DevOverlayUI {
       font-size: ${Math.max(12, Math.floor(size / 3))}px;
     `
 
-    btn.innerHTML = `<img src="https://raw.githubusercontent.com/Berea-Soft/nexa/refs/heads/main/src/assets/faviconNew.png" alt="Nexa" style="width:${size - 10}px;height:auto;object-fit:cover;border-radius:999px;display:block;" />`
+    btn.innerHTML = `<img src="${icon}" alt="${branding}" style="width:${size - 10}px;height:auto;object-fit:cover;border-radius:999px;display:block;" />`
 
     btn.addEventListener('click', (e) => {
       e.stopPropagation()
@@ -1259,6 +1453,24 @@ export class DevOverlayUI {
         this.panel.classList.add('nexa-theme-light')
       } else {
         this.panel.classList.remove('nexa-theme-light')
+      }
+
+      // Update branding and icon if changed
+      const logoImg = this.panel.querySelector(
+        '.nexa-logo img',
+      ) as HTMLImageElement
+      const titleSpan = this.panel.querySelector('.nexa-title') as HTMLElement
+      const branding = this.config.branding || 'Nexa DevTools'
+      const icon =
+        this.config.icon ||
+        'https://raw.githubusercontent.com/Berea-Soft/nexa/refs/heads/main/src/assets/faviconNew.png'
+
+      if (logoImg) {
+        logoImg.src = icon
+        logoImg.alt = branding
+      }
+      if (titleSpan) {
+        titleSpan.textContent = branding
       }
     }
 
