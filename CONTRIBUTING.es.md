@@ -93,6 +93,7 @@ pnpm build
 Los releases son automatizados. No publiques manualmente desde una máquina local salvo que los mantenedores lo indiquen explícitamente.
 
 - La publicación del paquete se resuelve mediante automatización de releases después del flujo correspondiente
+- Los mantenedores pueden ejecutar el job de release manualmente con `workflow_dispatch` sobre `main` cuando necesiten repetir una publicación
 - La verificación local del contribuidor debe usar `pnpm test`, `pnpm lint` y `pnpm build`
 
 Esto generará los siguientes archivos en `dist/`:

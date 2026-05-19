@@ -93,6 +93,7 @@ pnpm build
 Releases are automated. Do not publish manually from local machines unless maintainers explicitly ask for it.
 
 - Package publication is handled by release automation after the appropriate branch workflow
+- Maintainers can trigger the release job manually with `workflow_dispatch` on `main` when a re-run is needed
 - Local contributor verification should use `pnpm test`, `pnpm lint`, and `pnpm build`
 
 This will generate the following files in `dist/`:

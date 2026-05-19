@@ -34,7 +34,7 @@
   Objetivo: hacer instalaciones reproducibles en CI.
   Criterio de aceptación: el workflow usa `pnpm install --frozen-lockfile`.
 
-- [ ] `ci(release): decide and document manual release behavior`
+- [x] `ci(release): decide and document manual release behavior`
   Objetivo: dejar claro si `release` debe correr o no con `workflow_dispatch`.
   Criterio de aceptación: la política de release queda implementada y documentada.
 
@@ -98,7 +98,7 @@
 ## Quick Wins
 
 - [x] `ci: use frozen lockfile in GitHub Actions`
-- [ ] `ci(release): decide and document manual release behavior`
+- [x] `ci(release): decide and document manual release behavior`
 - [x] `chore(build): remove deprecated Vite inlineDynamicImports config`
 - [x] `docs(dev-overlay): document setup, scope and limitations`
 - [x] `docs(api): clarify dev-overlay exports in public documentation`
