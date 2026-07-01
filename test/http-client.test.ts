@@ -91,6 +91,57 @@ describe('HTTP Client Plugin', () => {
         expect(callArgs).toContain('page=1')
         expect(callArgs).toContain('limit=10')
       })
+
+      it('should serialize array query values as repeated keys', async () => {
+        fetchMock.mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          headers: new Headers(),
+          json: async () => ({ data: [] }),
+        })
+
+        await client.get('/users', { query: { tag: ['a', 'b', 'c'] } })
+
+        const callArgs = fetchMock.mock.calls[0][0] as string
+        const url = new URL(callArgs)
+        expect(url.searchParams.getAll('tag')).toEqual(['a', 'b', 'c'])
+      })
+
+      it('should serialize nested plain objects using bracket notation', async () => {
+        fetchMock.mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          headers: new Headers(),
+          json: async () => ({ data: [] }),
+        })
+
+        await client.get('/users', {
+          query: { filter: { status: 'active', role: 'admin' } },
+        })
+
+        const callArgs = fetchMock.mock.calls[0][0] as string
+        const url = new URL(callArgs)
+        expect(url.searchParams.get('filter[status]')).toBe('active')
+        expect(url.searchParams.get('filter[role]')).toBe('admin')
+      })
+
+      it('should omit null and undefined query values', async () => {
+        fetchMock.mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          headers: new Headers(),
+          json: async () => ({ data: [] }),
+        })
+
+        await client.get('/users', {
+          query: { page: 1, sort: null, limit: undefined },
+        })
+
+        const callArgs = fetchMock.mock.calls[0][0] as string
+        expect(callArgs).not.toContain('sort')
+        expect(callArgs).not.toContain('limit')
+        expect(callArgs).toContain('page=1')
+      })
     })
 
     describe('POST requests', () => {
@@ -156,6 +207,68 @@ describe('HTTP Client Plugin', () => {
         expect(result.ok).toBe(true)
         const [, options] = fetchMock.mock.calls[0]
         expect((options as RequestInit).method).toBe('DELETE')
+      })
+    })
+
+    describe('QUERY requests (safe, idempotent, body-carrying)', () => {
+      it('should send the method as QUERY with a JSON body', async () => {
+        fetchMock.mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          headers: new Headers(),
+          json: async () => ({ results: [] }),
+        })
+
+        const result = await client.query('/search', { term: 'nexa' })
+
+        expect(result.ok).toBe(true)
+        const [url, options] = fetchMock.mock.calls[0]
+        expect(url).toContain('/search')
+        expect((options as RequestInit).method).toBe('QUERY')
+        expect((options as RequestInit).body).toBe(
+          JSON.stringify({ term: 'nexa' }),
+        )
+      })
+
+      it('should cache QUERY responses when caching is enabled, keyed by body', async () => {
+        fetchMock
+          .mockResolvedValueOnce({
+            status: 200,
+            statusText: 'OK',
+            headers: new Headers(),
+            json: async () => ({ results: ['a'] }),
+          })
+          .mockResolvedValueOnce({
+            status: 200,
+            statusText: 'OK',
+            headers: new Headers(),
+            json: async () => ({ results: ['b'] }),
+          })
+
+        // Same body twice: second call is served from cache.
+        await client.query(
+          '/search',
+          { term: 'nexa' },
+          { cache: { enabled: true, ttlMs: 5000 } },
+        )
+        await client.query(
+          '/search',
+          { term: 'nexa' },
+          { cache: { enabled: true, ttlMs: 5000 } },
+        )
+        expect(fetchMock).toHaveBeenCalledTimes(1)
+
+        // Different body: must NOT hit the cache from the first query.
+        const differentBody = await client.query(
+          '/search',
+          { term: 'other' },
+          { cache: { enabled: true, ttlMs: 5000 } },
+        )
+        expect(fetchMock).toHaveBeenCalledTimes(2)
+        expect(differentBody.ok).toBe(true)
+        if (differentBody.ok) {
+          expect(differentBody.value.data).toEqual({ results: ['b'] })
+        }
       })
     })
   })
@@ -228,6 +341,46 @@ describe('HTTP Client Plugin', () => {
       // Then: should retry with backoff
       expect(result.ok).toBe(true)
       expect(fetchMock).toHaveBeenCalledTimes(3)
+    })
+
+    it('should remove the external abort listener after every retry attempt (no accumulation)', async () => {
+      // Given: a request that fails twice then succeeds, with an external signal
+      fetchMock
+        .mockResolvedValueOnce({
+          status: 500,
+          statusText: 'Server Error',
+          headers: new Headers(),
+          text: async () => 'Error',
+        })
+        .mockResolvedValueOnce({
+          status: 500,
+          statusText: 'Server Error',
+          headers: new Headers(),
+          text: async () => 'Error',
+        })
+        .mockResolvedValueOnce({
+          status: 200,
+          statusText: 'OK',
+          headers: new Headers(),
+          json: async () => ({ success: true }),
+        })
+
+      const controller = new AbortController()
+      const addSpy = vi.spyOn(controller.signal, 'addEventListener')
+      const removeSpy = vi.spyOn(controller.signal, 'removeEventListener')
+
+      // When: making the request with a retry strategy and an external signal
+      const result = await client.get('/flaky-endpoint', {
+        signal: controller.signal,
+        retry: { maxAttempts: 3, backoffMs: 5 },
+      })
+
+      // Then: one listener is added and removed per attempt — no leftover
+      // listeners accumulate on the shared external signal across retries.
+      expect(result.ok).toBe(true)
+      expect(fetchMock).toHaveBeenCalledTimes(3)
+      expect(addSpy).toHaveBeenCalledTimes(3)
+      expect(removeSpy).toHaveBeenCalledTimes(3)
     })
   })
 
@@ -982,6 +1135,28 @@ describe('HTTP Client Plugin', () => {
       if (!result.ok) {
         expect(result.error.code).toBe('NETWORK_ERROR')
       }
+    })
+
+    it('should report a real, non-negative duration for fast-path errors', async () => {
+      // Given: a dev tracker attached and a request that fails after a real delay
+      const tracked: Array<{ duration: number }> = []
+      const trackerClient = createHttpClient({
+        baseURL: 'https://api.example.com',
+        devTracker: { track: (data) => tracked.push(data) },
+      })
+      const netErr = new TypeError('Failed to fetch')
+      fetchMock.mockImplementationOnce(
+        () => new Promise((_, reject) => setTimeout(() => reject(netErr), 20)),
+      )
+
+      // When: making a plain request that takes the fast path (no retry/signal/etc.)
+      const result = await trackerClient.get('/endpoint')
+
+      // Then: the tracked duration reflects real elapsed time, not a bogus
+      // near-zero/negative value from mismatched performance.now() calls.
+      expect(result.ok).toBe(false)
+      expect(tracked).toHaveLength(1)
+      expect(tracked[0].duration).toBeGreaterThanOrEqual(15)
     })
 
     it('should handle unknown error type (string)', async () => {

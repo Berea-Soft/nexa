@@ -280,6 +280,13 @@ const result = await client.head("/users/1");
 
 // OPTIONS (preflight CORS, métodos disponibles)
 const result = await client.options("/users");
+
+// QUERY (método IETF-draft: seguro, idempotente, con body JSON)
+// Ideal para búsquedas/filtros complejos que no entran en una URL.
+const result = await client.query<User[]>("/users/search", {
+  filters: { role: "admin", active: true },
+  sort: ["-createdAt"],
+});
 ```
 
 Todos los métodos aceptan un objeto de configuración opcional como último parámetro:
@@ -315,6 +322,31 @@ const result = await client.get<User[]>("/users", {
   query: { page: 1, limit: 20, active: true },
 });
 // → GET /users?page=1&limit=20&active=true
+```
+
+Los arrays se serializan como claves repetidas, y un nivel de objetos anidados usa notación de corchetes. Los valores `null`/`undefined` se omiten:
+
+```typescript
+await client.get("/users", {
+  query: {
+    tag: ["admin", "vip"], // → tag=admin&tag=vip
+    filter: { status: "active" }, // → filter[status]=active
+    sort: undefined, // se omite
+  },
+});
+```
+
+### Método QUERY: búsquedas complejas con body
+
+El método HTTP `QUERY` (propuesta IETF) es seguro e idempotente como `GET`, pero permite enviar un body JSON — útil para filtros complejos que excederían el largo práctico de una URL. Nexa lo cachea igual que `GET` cuando `cache.enabled` está activo (el body forma parte de la clave de caché):
+
+```typescript
+const result = await client.query("/users/search", {
+  filters: { role: "admin" },
+  sort: ["-createdAt"],
+}, {
+  cache: { enabled: true, ttlMs: 30000 },
+});
 ```
 
 ### Serialización Automática del Body
@@ -1164,7 +1196,8 @@ const wsClient = createWebSocketClient("wss://echo.websocket.org", {
 });
 
 await wsClient.connect();
-wsClient.sendJson({ type: "message", data: "Hello" });
+const result = wsClient.sendJson({ type: "message", data: "Hello" });
+if (!result.ok) console.error("No se pudo enviar:", result.error.message);
 wsClient.onMessage((event) => console.log("Mensaje:", event.data));
 
 // SSE para streams de eventos
@@ -1810,7 +1843,7 @@ Ver la carpeta `examples/` para ejemplos de uso con diferentes frameworks:
 
 **HTTP Client** (`test/http-client.test.ts`) — **88 tests**:
 
-- ✓ Métodos core: create, GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS (7 tests)
+- ✓ Métodos core: create, GET/POST/PUT/DELETE/PATCH/HEAD/OPTIONS/QUERY (8 tests)
 - ✓ Estrategias de reintentos & timeouts (3 tests)
 - ✓ Interceptores & disposal (5 tests)
 - ✓ Caché & validación (4 tests)

@@ -104,6 +104,19 @@ runNodeTests('Node.js HTTP Adapters', () => {
       expect(data.body).toBe(body)
     })
 
+    it('should handle the QUERY method with a JSON body (safe, body-carrying request)', async () => {
+      const body = JSON.stringify({ term: 'nexa' })
+      const response = await nodeHttpAdapter(`${baseUrl}/echo`, {
+        method: 'QUERY',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      })
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.method).toBe('QUERY')
+      expect(data.body).toBe(body)
+    })
+
     it('should handle HTTP errors', async () => {
       const response = await nodeHttpAdapter(`${baseUrl}/error`, {
         method: 'GET',
@@ -140,6 +153,23 @@ runNodeTests('Node.js HTTP Adapters', () => {
       } catch (error: any) {
         expect(error.name).toBe('AbortError')
       }
+    })
+
+    it('should reject FormData bodies with a clear, explicit error instead of sending an empty body', async () => {
+      const form = new FormData()
+      form.append('a', 'b')
+
+      await expect(
+        nodeHttpAdapter(`${baseUrl}/echo`, { method: 'POST', body: form }),
+      ).rejects.toThrow(/Unsupported request body type.*FormData/i)
+    })
+
+    it('should reject URLSearchParams bodies with a clear, explicit error', async () => {
+      const params = new URLSearchParams({ a: 'b' })
+
+      await expect(
+        nodeHttpAdapter(`${baseUrl}/echo`, { method: 'POST', body: params }),
+      ).rejects.toThrow(/Unsupported request body type.*URLSearchParams/i)
     })
   })
 
@@ -246,6 +276,15 @@ runNodeTests('Node.js HTTP Adapters', () => {
       } catch (error: any) {
         expect(error.name).toBe('AbortError')
       }
+    })
+
+    it('should reject FormData bodies with a clear, explicit error', async () => {
+      const form = new FormData()
+      form.append('a', 'b')
+
+      await expect(
+        nodeHttp2Adapter(`${baseUrl}/json`, { method: 'POST', body: form }),
+      ).rejects.toThrow(/Unsupported request body type.*FormData/i)
     })
   })
 })

@@ -6,7 +6,10 @@ import type {
   WebSocketOptions,
   IWebSocketClient,
   RealtimeMessageEvent,
+  RealtimeSendError,
+  Result,
 } from '../types/index.js'
+import { Ok, Err } from '../types/index.js'
 import { PluginManager } from '../utils/index.js'
 
 /**
@@ -31,6 +34,7 @@ abstract class BaseRealtimeClient {
   protected reconnectAttempt = 0
   protected reconnectTimer: ReturnType<typeof setTimeout> | null = null
   protected heartbeatTimer: ReturnType<typeof setInterval> | null = null
+  private stopHeartbeatMessageListener: (() => void) | null = null
   protected stats = {
     messagesSent: 0,
     messagesReceived: 0,
@@ -159,10 +163,10 @@ abstract class BaseRealtimeClient {
 
     const baseDelay = this.options.reconnect?.baseDelay ?? 1000
     const maxDelay = this.options.reconnect?.maxDelay ?? 30000
-    const delay = Math.min(
-      maxDelay,
-      baseDelay * Math.pow(2, this.reconnectAttempt),
-    )
+    const backoff = baseDelay * Math.pow(2, this.reconnectAttempt)
+    // Jitter avoids a thundering herd when many clients reconnect at once.
+    const jitter = Math.random() * backoff * 0.1
+    const delay = Math.min(maxDelay, backoff + jitter)
 
     this.reconnectAttempt++
     this.stats.reconnectAttempts = this.reconnectAttempt
@@ -200,7 +204,14 @@ abstract class BaseRealtimeClient {
         return
       }
       pongReceived = false
-      this.send(pingMessage)
+      const result = this.send(pingMessage)
+      if (!result.ok) {
+        this.pluginManager.emit(
+          'websocket:heartbeat:send-failed',
+          this.url,
+          result.error,
+        )
+      }
       this.heartbeatTimer = setTimeout(checkPong, interval)
     }
 
@@ -212,7 +223,8 @@ abstract class BaseRealtimeClient {
       }
     }
 
-    this.onMessage(messageListener)
+    this.stopHeartbeatMessageListener?.()
+    this.stopHeartbeatMessageListener = this.onMessage(messageListener)
     this.heartbeatTimer = setTimeout(checkPong, interval)
   }
 
@@ -221,6 +233,8 @@ abstract class BaseRealtimeClient {
       clearTimeout(this.heartbeatTimer)
       this.heartbeatTimer = null
     }
+    this.stopHeartbeatMessageListener?.()
+    this.stopHeartbeatMessageListener = null
   }
 
   protected cleanup(): void {
@@ -233,7 +247,9 @@ abstract class BaseRealtimeClient {
 
   abstract connect(): Promise<void>
   abstract disconnect(): void
-  abstract send(data: string | ArrayBuffer | Blob): void
+  abstract send(
+    data: string | ArrayBuffer | Blob,
+  ): Result<void, RealtimeSendError>
 }
 
 /**
@@ -347,17 +363,31 @@ class BrowserWebSocketClient
     }
   }
 
-  send(data: string | ArrayBuffer | Blob): void {
+  send(data: string | ArrayBuffer | Blob): Result<void, RealtimeSendError> {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      throw new Error('WebSocket is not connected')
+      return Err({
+        message: 'WebSocket is not connected',
+        code: 'NOT_CONNECTED',
+      })
     }
-    this.socket.send(data)
+    try {
+      this.socket.send(data)
+    } catch (error) {
+      return Err({
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to send WebSocket message',
+        code: 'SEND_FAILED',
+      })
+    }
     this.stats.messagesSent++
     this.pluginManager.emit('websocket:message:sent', this.url, data)
+    return Ok(undefined) as Result<void, RealtimeSendError>
   }
 
-  sendJson(data: unknown): void {
-    this.send(JSON.stringify(data))
+  sendJson(data: unknown): Result<void, RealtimeSendError> {
+    return this.send(JSON.stringify(data))
   }
 
   onMessageType<T = unknown>(

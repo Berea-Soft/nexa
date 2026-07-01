@@ -50,6 +50,7 @@ import type {
   HttpTimeout,
   ProgressEvent as NexaProgressEvent,
   DevTracker,
+  QueryParams,
 } from '../types'
 import { Ok, Err } from '../types'
 import { CacheStore } from '../utils'
@@ -211,6 +212,38 @@ function interpolatePath(
   })
 }
 
+/**
+ * Build a query string from a QueryParams object.
+ * - `null`/`undefined` values are omitted.
+ * - Arrays are serialized as repeated keys: `?tag=a&tag=b`.
+ * - One level of nested plain objects uses bracket notation: `?filter[status]=active`.
+ */
+function buildQueryString(query: QueryParams): string {
+  const params = new URLSearchParams()
+
+  for (const [key, value] of Object.entries(query)) {
+    if (value === null || value === undefined) {
+      continue
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        params.append(key, String(item))
+      }
+    } else if (typeof value === 'object') {
+      for (const [nestedKey, nestedValue] of Object.entries(value)) {
+        if (nestedValue === null || nestedValue === undefined) {
+          continue
+        }
+        params.append(`${key}[${nestedKey}]`, String(nestedValue))
+      }
+    } else {
+      params.append(key, String(value))
+    }
+  }
+
+  return params.toString()
+}
+
 // ============= Main HTTP Client =============
 
 /**
@@ -305,9 +338,10 @@ export class HttpClient implements IHttpClient {
     try {
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         let controller: AbortController | undefined
+        let externalAbortListener: (() => void) | undefined
         try {
-          // Step 1: Check cache for GET requests
-          if (config.method === 'GET' || !config.method) {
+          // Step 1: Check cache for cacheable requests (GET, QUERY)
+          if (this.isCacheableMethod(config.method)) {
             if (config.cache?.enabled) {
               const cacheKey = this.getCacheKey(config)
               const cached = this.cache.get(cacheKey)
@@ -343,7 +377,8 @@ export class HttpClient implements IHttpClient {
 
           // Merge external signal if provided
           if (config.signal) {
-            config.signal.addEventListener('abort', () => controller!.abort(), {
+            externalAbortListener = () => controller!.abort()
+            config.signal.addEventListener('abort', externalAbortListener, {
               once: true,
             })
           }
@@ -408,11 +443,8 @@ export class HttpClient implements IHttpClient {
             finalResponse = await interceptor.onResponse(finalResponse)
           }
 
-          // Step 11: Cache successful GET responses
-          if (
-            (config.method === 'GET' || !config.method) &&
-            config.cache?.enabled
-          ) {
+          // Step 11: Cache successful responses for cacheable methods (GET, QUERY)
+          if (this.isCacheableMethod(config.method) && config.cache?.enabled) {
             const cacheKey = this.getCacheKey(config)
             this.cache.set(cacheKey, finalResponse, config.cache.ttlMs)
           }
@@ -494,6 +526,10 @@ export class HttpClient implements IHttpClient {
           })
 
           return Err(finalErrorDetails)
+        } finally {
+          if (config.signal && externalAbortListener) {
+            config.signal.removeEventListener('abort', externalAbortListener)
+          }
         }
       }
 
@@ -550,8 +586,8 @@ export class HttpClient implements IHttpClient {
 
     this.pendingRequests.add(controller)
 
+    const startTime = performance.now()
     try {
-      const startTime = performance.now()
       const response = await this.fetchWithTimeout(
         {
           url,
@@ -644,7 +680,7 @@ export class HttpClient implements IHttpClient {
       this.trackDev({
         method: config.method ?? 'GET',
         url,
-        duration: performance.now() - (performance.now() - 0),
+        duration: performance.now() - startTime,
         cached: false,
         ok: false,
         code,
@@ -707,6 +743,19 @@ export class HttpClient implements IHttpClient {
     config?: Omit<HttpRequestConfig, 'url' | 'method' | 'body'>,
   ) {
     return this.request<T>({ ...config, url, method: 'PATCH', body })
+  }
+
+  /**
+   * Safe, idempotent request carrying a JSON body (IETF-draft HTTP QUERY
+   * method). Use it for complex search/filter payloads that don't fit in a
+   * URL. Cacheable like GET when `config.cache` is enabled.
+   */
+  query<T = unknown>(
+    url: string,
+    body?: unknown,
+    config?: Omit<HttpRequestConfig, 'url' | 'method' | 'body'>,
+  ) {
+    return this.request<T>({ ...config, url, method: 'QUERY', body })
   }
 
   delete<T = unknown>(
@@ -926,30 +975,32 @@ export class HttpClient implements IHttpClient {
     }
   }
 
-  private buildUrl(
-    path: string,
-    query?: Record<string, string | number | boolean>,
-  ): string {
+  private buildUrl(path: string, query?: QueryParams): string {
     let url = this.config.baseURL + path
 
-    if (query) {
-      const keys = Object.keys(query)
-      if (keys.length > 0) {
-        const params = new URLSearchParams()
-        for (let i = 0; i < keys.length; i++) {
-          params.append(keys[i], String(query[keys[i]]))
-        }
-        url += `?${params.toString()}`
+    if (query && Object.keys(query).length > 0) {
+      const queryString = buildQueryString(query)
+      if (queryString) {
+        url += `?${queryString}`
       }
     }
 
     return url
   }
 
+  private isCacheableMethod(method?: HttpRequestConfig['method']): boolean {
+    return method === 'GET' || method === 'QUERY' || !method
+  }
+
   private getCacheKey(config: HttpRequestConfig): string {
     const path = interpolatePath(config.url, config.params)
     const queryStr = config.query ? JSON.stringify(config.query) : ''
-    return `${config.method ?? 'GET'}:${path}${queryStr ? ':' + queryStr : ''}`
+    // QUERY's body defines the query itself, so it must be part of the cache key.
+    const bodyStr =
+      config.method === 'QUERY' && config.body !== undefined
+        ? JSON.stringify(config.body)
+        : ''
+    return `${config.method ?? 'GET'}:${path}${queryStr ? ':' + queryStr : ''}${bodyStr ? ':' + bodyStr : ''}`
   }
 
   private fetchWithTimeout(

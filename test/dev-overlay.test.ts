@@ -224,6 +224,148 @@ describe('RequestTracker', () => {
     expect(tracker.getHistory()).toEqual([])
     expect(tracker.getMetrics().totalRequests).toBe(0)
   })
+
+  it('should evict the oldest entry once the ring buffer exceeds maxHistory', () => {
+    const tracker = new RequestTracker({ maxHistory: 3 })
+
+    for (let i = 1; i <= 4; i++) {
+      tracker.track({
+        method: 'GET',
+        url: `https://api.example.com/${i}`,
+        status: 200,
+        duration: i,
+        cached: false,
+        ok: true,
+        headers: {},
+        retryCount: 0,
+      })
+    }
+
+    const history = tracker.getHistory()
+    expect(history).toHaveLength(3)
+    // Newest first; the oldest ("/1") must have been evicted.
+    expect(history.map((r) => r.url)).toEqual([
+      'https://api.example.com/4',
+      'https://api.example.com/3',
+      'https://api.example.com/2',
+    ])
+  })
+
+  it('should return a fresh copy from getHistory() that callers cannot use to mutate internal state', () => {
+    const tracker = new RequestTracker()
+    tracker.track({
+      method: 'GET',
+      url: 'https://api.example.com/users',
+      status: 200,
+      duration: 100,
+      cached: false,
+      ok: true,
+      headers: {},
+      retryCount: 0,
+    })
+
+    const first = tracker.getHistory()
+    first.pop()
+    first.push({
+      id: 'fake',
+      method: 'GET',
+      url: 'injected',
+      duration: 0,
+      timestamp: 0,
+      cached: false,
+      ok: true,
+      headers: {},
+      retryCount: 0,
+    })
+
+    const second = tracker.getHistory()
+    expect(second).not.toBe(first)
+    expect(second).toHaveLength(1)
+    expect(second[0].url).toBe('https://api.example.com/users')
+  })
+
+  it('should keep the most recent entries when maxHistory shrinks via updateConfig', () => {
+    const tracker = new RequestTracker({ maxHistory: 5 })
+    for (let i = 1; i <= 5; i++) {
+      tracker.track({
+        method: 'GET',
+        url: `https://api.example.com/${i}`,
+        status: 200,
+        duration: i,
+        cached: false,
+        ok: true,
+        headers: {},
+        retryCount: 0,
+      })
+    }
+
+    tracker.updateConfig({ maxHistory: 2 })
+
+    const history = tracker.getHistory()
+    expect(history).toHaveLength(2)
+    expect(history.map((r) => r.url)).toEqual([
+      'https://api.example.com/5',
+      'https://api.example.com/4',
+    ])
+
+    // Buffer capacity actually shrank — tracking one more evicts down to 2, not 3.
+    tracker.track({
+      method: 'GET',
+      url: 'https://api.example.com/6',
+      status: 200,
+      duration: 6,
+      cached: false,
+      ok: true,
+      headers: {},
+      retryCount: 0,
+    })
+    expect(tracker.getHistory()).toHaveLength(2)
+  })
+
+  it('should preserve existing entries when maxHistory grows via updateConfig', () => {
+    const tracker = new RequestTracker({ maxHistory: 2 })
+    tracker.track({
+      method: 'GET',
+      url: 'https://api.example.com/1',
+      status: 200,
+      duration: 1,
+      cached: false,
+      ok: true,
+      headers: {},
+      retryCount: 0,
+    })
+    tracker.track({
+      method: 'GET',
+      url: 'https://api.example.com/2',
+      status: 200,
+      duration: 2,
+      cached: false,
+      ok: true,
+      headers: {},
+      retryCount: 0,
+    })
+
+    tracker.updateConfig({ maxHistory: 5 })
+
+    expect(tracker.getHistory().map((r) => r.url)).toEqual([
+      'https://api.example.com/2',
+      'https://api.example.com/1',
+    ])
+
+    for (let i = 3; i <= 5; i++) {
+      tracker.track({
+        method: 'GET',
+        url: `https://api.example.com/${i}`,
+        status: 200,
+        duration: i,
+        cached: false,
+        ok: true,
+        headers: {},
+        retryCount: 0,
+      })
+    }
+    expect(tracker.getHistory()).toHaveLength(5)
+  })
 })
 
 describe('Dev Overlay lifecycle', () => {
@@ -297,5 +439,116 @@ describe('Dev Overlay lifecycle', () => {
 
     expect(overlay.tracker).toBeInstanceOf(RequestTracker)
     expect(overlay.ui).toBeInstanceOf(DevOverlayUI)
+  })
+
+  it('should escape malicious request URLs before rendering into the DOM', () => {
+    const mockDocument = createMockDocument()
+    vi.stubGlobal('document', mockDocument)
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callback(0)
+      return 0
+    })
+
+    const tracker = new RequestTracker()
+    const ui = new DevOverlayUI(tracker)
+    ui.show()
+    const panel = (mockDocument.createElement as ReturnType<typeof vi.fn>).mock
+      .results[0].value as MockElement
+
+    tracker.track({
+      method: 'GET',
+      url: 'https://api.example.com/<img src=x onerror=alert(1)>',
+      status: 200,
+      duration: 10,
+      cached: false,
+      ok: true,
+      headers: {},
+      retryCount: 0,
+    })
+
+    const requestList = panel.querySelector('.nexa-request-list') as MockElement
+    expect(requestList.innerHTML).not.toContain('<img')
+    expect(requestList.innerHTML).toContain('&lt;img')
+  })
+
+  it('should escape malicious body/headers in the request detail view', () => {
+    const mockDocument = createMockDocument()
+    vi.stubGlobal('document', mockDocument)
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callback(0)
+      return 0
+    })
+
+    const tracker = new RequestTracker()
+    const ui = new DevOverlayUI(tracker)
+    const panel = (mockDocument.createElement as ReturnType<typeof vi.fn>).mock
+      .results[0].value as MockElement
+
+    const tracked = tracker.track({
+      method: 'GET',
+      url: 'https://api.example.com/users',
+      status: 200,
+      duration: 10,
+      cached: false,
+      ok: true,
+      headers: { 'x-evil': '<script>alert(1)</script>' },
+      body: { evil: '<img src=x onerror=alert(1)>' },
+      retryCount: 0,
+    })
+    ;(ui as unknown as { showDetail: (r: typeof tracked) => void }).showDetail(
+      tracked,
+    )
+
+    const detailBody = panel.querySelector('.nexa-detail-body') as MockElement
+    expect(detailBody.innerHTML).not.toContain('<script>')
+    expect(detailBody.innerHTML).not.toContain('<img src=x')
+    expect(detailBody.innerHTML).toContain('&lt;script&gt;')
+  })
+
+  it('should track a retry as a new tracked request instead of mutating the original', async () => {
+    const mockDocument = createMockDocument()
+    vi.stubGlobal('document', mockDocument)
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callback(0)
+      return 0
+    })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ status: 201, ok: true }))
+
+    const tracker = new RequestTracker()
+    const ui = new DevOverlayUI(tracker)
+    const panel = (mockDocument.createElement as ReturnType<typeof vi.fn>).mock
+      .results[0].value as MockElement
+
+    const original = tracker.track({
+      method: 'POST',
+      url: 'https://api.example.com/users',
+      status: 500,
+      duration: 20,
+      cached: false,
+      ok: false,
+      headers: {},
+      body: { name: 'a' },
+      retryCount: 0,
+    })
+
+    ;(ui as unknown as { showDetail: (r: typeof original) => void }).showDetail(
+      original,
+    )
+    const retryButton = panel.querySelector('.nexa-btn-retry') as MockElement
+    retryButton.dispatchEvent('click')
+
+    await vi.waitFor(() => {
+      expect(tracker.getHistory().length).toBe(2)
+    })
+
+    // The original entry must stay untouched
+    expect(tracker.getHistory().find((r) => r.id === original.id)?.status).toBe(
+      500,
+    )
+
+    const [newest] = tracker.getHistory()
+    expect(newest.id).not.toBe(original.id)
+    expect(newest.status).toBe(201)
+    expect(newest.ok).toBe(true)
   })
 })

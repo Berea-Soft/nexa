@@ -266,6 +266,13 @@ const result = await client.head("/users/1");
 
 // OPTIONS (CORS preflight, available methods)
 const result = await client.options("/users");
+
+// QUERY (IETF-draft method: safe, idempotent, JSON body)
+// Ideal for complex search/filter payloads that don't fit in a URL.
+const result = await client.query<User[]>("/users/search", {
+  filters: { role: "admin", active: true },
+  sort: ["-createdAt"],
+});
 ```
 
 All methods accept an optional config object as the last parameter:
@@ -301,6 +308,31 @@ const result = await client.get<User[]>("/users", {
   query: { page: 1, limit: 20, active: true },
 });
 // → GET /users?page=1&limit=20&active=true
+```
+
+Arrays are serialized as repeated keys, and one level of nested objects uses bracket notation. `null`/`undefined` values are omitted:
+
+```typescript
+await client.get("/users", {
+  query: {
+    tag: ["admin", "vip"], // → tag=admin&tag=vip
+    filter: { status: "active" }, // → filter[status]=active
+    sort: undefined, // omitted
+  },
+});
+```
+
+### QUERY method: complex searches with a body
+
+The `QUERY` HTTP method (IETF draft) is safe and idempotent like `GET`, but allows sending a JSON body — useful for complex filters that would exceed a URL's practical length. Nexa caches it the same way as `GET` when `cache.enabled` is set (the body is part of the cache key):
+
+```typescript
+const result = await client.query("/users/search", {
+  filters: { role: "admin" },
+  sort: ["-createdAt"],
+}, {
+  cache: { enabled: true, ttlMs: 30000 },
+});
 ```
 
 ### Auto Body Serialization

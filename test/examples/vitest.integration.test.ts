@@ -129,14 +129,14 @@ describe('Nexa HTTP Client - Vitest Integration Examples', () => {
       // Arrange
       mockAdapter.onGet('/slow').timeout()
 
-      // Act
-      const result = await mockAdapter.client.get('/slow')
+      // Act — the mock delays far longer than this request timeout, so the
+      // client's own abort/timeout logic fires first (real TimeoutError path).
+      const result = await mockAdapter.client.get('/slow', { timeout: 20 })
 
       // Assert
       expect(result.ok).toBe(false)
       if (!result.ok) {
-        expect(result.error.code).toBe('HTTP_ERROR')
-        expect(result.error.status).toBe(408) // Request Timeout
+        expect(result.error.code).toBe('TIMEOUT')
       }
     })
 

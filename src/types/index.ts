@@ -16,12 +16,42 @@ export const Ok = <T>(value: T): Result<T> => ({ ok: true, value })
 export const Err = <E>(error: E): Result<never, E> => ({ ok: false, error })
 
 // ============= HTTP Request/Response =============
+
+/**
+ * A single query-string value. Arrays are serialized as repeated keys
+ * (`?tag=a&tag=b`); nested plain objects use one level of bracket notation
+ * (`?filter[status]=active`). `null`/`undefined` values are omitted.
+ */
+export type QueryParamValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Array<string | number | boolean>
+  | Record<string, string | number | boolean | null | undefined>
+
+export type QueryParams = Record<string, QueryParamValue>
+
 export interface HttpRequest {
   url: string
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
+  /**
+   * 'QUERY' is the IETF-draft safe/idempotent/cacheable HTTP method that
+   * carries a JSON body — use it for complex search/filter payloads that
+   * don't fit cleanly in a URL. See `IHttpClient.query()`.
+   */
+  method?:
+    | 'GET'
+    | 'POST'
+    | 'PUT'
+    | 'PATCH'
+    | 'DELETE'
+    | 'HEAD'
+    | 'OPTIONS'
+    | 'QUERY'
   headers?: Record<string, string>
   body?: unknown
-  query?: Record<string, string | number | boolean>
+  query?: QueryParams
   params?: Record<string, string | number>
   timeout?: HttpTimeout
   signal?: AbortSignal
@@ -317,6 +347,16 @@ export interface IHttpClient {
     body?: unknown,
     config?: Omit<HttpRequestConfig, 'url' | 'method' | 'body'>,
   ): Promise<Result<HttpResponse<T>, HttpErrorDetails>>
+  /**
+   * Safe, idempotent request carrying a JSON body — for complex search/filter
+   * payloads that don't fit in a URL. Cacheable like GET when `config.cache`
+   * is enabled (the body is included in the cache key).
+   */
+  query<T = unknown>(
+    url: string,
+    body?: unknown,
+    config?: Omit<HttpRequestConfig, 'url' | 'method' | 'body'>,
+  ): Promise<Result<HttpResponse<T>, HttpErrorDetails>>
   delete<T = unknown>(
     url: string,
     config?: Omit<HttpRequestConfig, 'url' | 'method'>,
@@ -520,6 +560,14 @@ export interface RealtimeMessageEvent<T = unknown> {
 }
 
 /**
+ * Error returned by a failed IRealtimeClient.send()/sendJson() call.
+ */
+export interface RealtimeSendError {
+  message: string
+  code: 'NOT_CONNECTED' | 'UNSUPPORTED' | 'SEND_FAILED'
+}
+
+/**
  * Real-time client interface
  */
 export interface IRealtimeClient {
@@ -527,8 +575,8 @@ export interface IRealtimeClient {
   connect(): Promise<void>
   /** Disconnect from the server */
   disconnect(): void
-  /** Send a message */
-  send(data: string | ArrayBuffer | Blob): void
+  /** Send a message. Returns a Result instead of throwing on failure. */
+  send(data: string | ArrayBuffer | Blob): Result<void, RealtimeSendError>
   /** Subscribe to messages */
   onMessage<T = unknown>(
     callback: (event: RealtimeMessageEvent<T>) => void,
@@ -556,8 +604,8 @@ export interface IRealtimeClient {
 export interface IWebSocketClient extends IRealtimeClient {
   /** WebSocket instance */
   readonly socket: WebSocket | null
-  /** Send JSON data (automatically serialized) */
-  sendJson(data: unknown): void
+  /** Send JSON data (automatically serialized). Returns a Result instead of throwing. */
+  sendJson(data: unknown): Result<void, RealtimeSendError>
   /** Subscribe to specific message types */
   onMessageType<T = unknown>(
     type: string,

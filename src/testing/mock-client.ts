@@ -5,6 +5,9 @@
 
 import type { IHttpClient, HttpRequestConfig } from '../types/index.js'
 
+/** Max safe setTimeout delay (~24.8 days) — used to simulate a hung server in .timeout() */
+const MAX_MOCK_DELAY_MS = 2147483647
+
 /**
  * Configuration for a mocked response
  */
@@ -134,12 +137,15 @@ class RouteBuilder {
   }
 
   /**
-   * Configure a timeout error for this route
+   * Configure this route to simulate a timeout. Rather than returning an
+   * instant response, the mock delays far longer than any real request
+   * timeout so the calling client's own abort/timeout logic fires first —
+   * exercising the same `TimeoutError` path a real hung server would trigger.
    */
   timeout(): MockAdapter {
     this.adapter.addRoute(this.method, this.urlPattern, {
-      status: 408,
-      statusText: 'Request Timeout',
+      status: 200,
+      delay: MAX_MOCK_DELAY_MS,
     })
     return this.adapter
   }
@@ -420,6 +426,13 @@ export class MockAdapter {
    */
   onDelete(urlPattern: string | RegExp): RouteBuilder {
     return new RouteBuilder(this, 'DELETE', urlPattern)
+  }
+
+  /**
+   * Add a route for QUERY requests (safe, idempotent, body-carrying)
+   */
+  onQuery(urlPattern: string | RegExp): RouteBuilder {
+    return new RouteBuilder(this, 'QUERY', urlPattern)
   }
 
   /**

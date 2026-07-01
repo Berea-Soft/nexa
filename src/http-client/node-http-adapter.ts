@@ -204,6 +204,29 @@ function extractRequestInfo(
 }
 
 /**
+ * These body types cannot be written to a raw Node http/http2 request as-is;
+ * silently JSON.stringify-ing them would send garbage (e.g. `{}` for a FormData).
+ */
+function getUnsupportedBodyType(body: unknown): string | null {
+  if (typeof FormData !== 'undefined' && body instanceof FormData) {
+    return 'FormData'
+  }
+  if (
+    typeof URLSearchParams !== 'undefined' &&
+    body instanceof URLSearchParams
+  ) {
+    return 'URLSearchParams'
+  }
+  if (typeof Blob !== 'undefined' && body instanceof Blob) {
+    return 'Blob'
+  }
+  if (typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) {
+    return 'ReadableStream'
+  }
+  return null
+}
+
+/**
  * Create agent with keep-alive configuration
  */
 function createAgent(
@@ -251,7 +274,7 @@ async function createResponse(
   const chunks: Buffer[] = []
   nodeRes.on('data', (chunk) => chunks.push(chunk))
 
-  return new Promise<Response>((resolve) => {
+  return new Promise<Response>((resolve, reject) => {
     nodeRes.on('end', () => {
       const body = Buffer.concat(chunks)
       resolve(
@@ -262,6 +285,7 @@ async function createResponse(
         }),
       )
     })
+    nodeRes.on('error', reject)
   })
 }
 
@@ -333,6 +357,17 @@ export async function nodeHttpAdapter(
 
     // Write body if present
     if (body) {
+      const unsupportedType = getUnsupportedBodyType(body)
+      if (unsupportedType) {
+        req.destroy()
+        reject(
+          new Error(
+            `Unsupported request body type for the Node HTTP adapter: ${unsupportedType}. ` +
+              'Serialize it to a string, Buffer, or plain object before sending.',
+          ),
+        )
+        return
+      }
       if (typeof body === 'string') {
         req.write(body)
       } else if (body instanceof Uint8Array) {
@@ -342,7 +377,6 @@ export async function nodeHttpAdapter(
       } else if (typeof body === 'object') {
         req.write(JSON.stringify(body))
       }
-      // Note: ReadableStream not supported in this simple adapter
     }
 
     req.end()
@@ -464,6 +498,17 @@ export async function nodeHttp2Adapter(
       })
 
       if (body) {
+        const unsupportedType = getUnsupportedBodyType(body)
+        if (unsupportedType) {
+          req.close()
+          cleanupAndReject(
+            new Error(
+              `Unsupported request body type for the Node HTTP/2 adapter: ${unsupportedType}. ` +
+                'Serialize it to a string, Buffer, or plain object before sending.',
+            ),
+          )
+          return
+        }
         if (typeof body === 'string') {
           req.write(body)
         } else if (body instanceof Uint8Array || Buffer.isBuffer(body)) {

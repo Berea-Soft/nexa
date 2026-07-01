@@ -34,6 +34,8 @@ import {
   MiddlewarePipeline,
   // Typed
   createTypedResponse,
+  createTypedRequest,
+  createTypedApiClient,
   TypedObservable,
   Defer,
   createTypeGuard,
@@ -45,8 +47,14 @@ import {
   MetricsPlugin,
   CachePlugin,
   DedupePlugin,
+  Ok,
+  Err,
 } from '../src/http-client/index.js'
-import type { HttpContext } from '../src/http-client/index.js'
+import type {
+  HttpContext,
+  IHttpClient,
+  ApiSchema,
+} from '../src/http-client/index.js'
 
 // ============= Validators =============
 describe('Validators', () => {
@@ -68,6 +76,19 @@ describe('Validators', () => {
       expect(result.ok).toBe(false)
       if (!result.ok) expect(result.error.message).toContain('name')
     })
+
+    it('should return a typed Err instead of throwing for non-object input', () => {
+      const validator = createSchemaValidator<{ name: string }>({
+        name: (v) => typeof v === 'string',
+      })
+      expect(() => validator.validate(null)).not.toThrow()
+      expect(() => validator.validate(42)).not.toThrow()
+      const nullResult = validator.validate(null)
+      expect(nullResult.ok).toBe(false)
+      if (!nullResult.ok) expect(nullResult.error.code).toBe('VALIDATION_ERROR')
+      const numberResult = validator.validate(42)
+      expect(numberResult.ok).toBe(false)
+    })
   })
 
   describe('createRequiredFieldsValidator', () => {
@@ -82,6 +103,15 @@ describe('Validators', () => {
       const result = validator.validate({ id: 1 })
       expect(result.ok).toBe(false)
       if (!result.ok) expect(result.error.message).toContain('email')
+    })
+
+    it('should return a typed Err instead of throwing for non-object input', () => {
+      const validator = createRequiredFieldsValidator(['id'])
+      expect(() => validator.validate(null)).not.toThrow()
+      expect(() => validator.validate('a string')).not.toThrow()
+      const result = validator.validate(null)
+      expect(result.ok).toBe(false)
+      if (!result.ok) expect(result.error.code).toBe('VALIDATION_ERROR')
     })
   })
 
@@ -145,6 +175,16 @@ describe('Transformers', () => {
     it('should flatten nested objects', () => {
       const result = transformFlatten.transform({ a: { b: 1, c: { d: 2 } } })
       expect(result).toEqual({ 'a.b': 1, 'a.c.d': 2 })
+    })
+
+    it('should flatten a top-level array the same way as a nested array', () => {
+      const topLevel = transformFlatten.transform([{ id: 1 }, { id: 2 }])
+      expect(topLevel).toEqual({ '[0].id': 1, '[1].id': 2 })
+
+      const nested = transformFlatten.transform({
+        items: [{ id: 1 }, { id: 2 }],
+      })
+      expect(nested).toEqual({ 'items[0].id': 1, 'items[1].id': 2 })
     })
   })
 
@@ -651,6 +691,152 @@ describe('Typed Generics', () => {
         (v): v is string => typeof v === 'string',
       )
       expect(() => guard(42)).toThrow('Value does not match expected type')
+    })
+  })
+
+  describe('createTypedRequest / createTypedApiClient', () => {
+    function createMockClient(
+      overrides: Partial<IHttpClient> = {},
+    ): IHttpClient {
+      const notImplemented = vi.fn(() =>
+        Promise.reject(new Error('not implemented')),
+      )
+      return {
+        request: notImplemented,
+        get: notImplemented,
+        post: notImplemented,
+        put: notImplemented,
+        patch: notImplemented,
+        delete: notImplemented,
+        query: notImplemented,
+        head: notImplemented,
+        options: notImplemented,
+        addRequestInterceptor: vi.fn(() => () => {}),
+        addResponseInterceptor: vi.fn(() => () => {}),
+        clearInterceptors: vi.fn(),
+        extend: vi.fn(),
+        paginate: vi.fn(),
+        ...overrides,
+      } as unknown as IHttpClient
+    }
+
+    it('should unwrap a successful Result and return the response data', async () => {
+      const client = createMockClient({
+        get: vi
+          .fn()
+          .mockResolvedValue(
+            Ok({ status: 200, statusText: 'OK', headers: {}, data: { id: 1 } }),
+          ),
+      })
+
+      const getUser = createTypedRequest<void, { id: number }>({
+        method: 'GET',
+        path: '/users/1',
+        response: { id: 0 },
+      })
+
+      const data = await getUser(client)
+      expect(data).toEqual({ id: 1 })
+    })
+
+    it('should throw when the underlying request fails instead of returning the Result wrapper', async () => {
+      const client = createMockClient({
+        get: vi
+          .fn()
+          .mockResolvedValue(Err({ message: 'Not Found', code: 'HTTP_ERROR' })),
+      })
+
+      const getUser = createTypedRequest<void, { id: number }>({
+        method: 'GET',
+        path: '/users/1',
+        response: { id: 0 },
+      })
+
+      await expect(getUser(client)).rejects.toThrow('Not Found')
+    })
+
+    it('should pass the request body through for POST/PUT/PATCH', async () => {
+      const postSpy = vi.fn().mockResolvedValue(
+        Ok({
+          status: 201,
+          statusText: 'Created',
+          headers: {},
+          data: { id: 2 },
+        }),
+      )
+      const client = createMockClient({ post: postSpy })
+
+      const createUser = createTypedRequest<{ name: string }, { id: number }>({
+        method: 'POST',
+        path: '/users',
+        response: { id: 0 },
+      })
+
+      const data = await createUser(client, { name: 'Ada' })
+      expect(postSpy).toHaveBeenCalledWith('/users', { name: 'Ada' })
+      expect(data).toEqual({ id: 2 })
+    })
+
+    it('should route the QUERY method to client.query() with the request body', async () => {
+      const querySpy = vi.fn().mockResolvedValue(
+        Ok({
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          data: { results: ['a'] },
+        }),
+      )
+      const client = createMockClient({ query: querySpy })
+
+      const searchUsers = createTypedRequest<
+        { term: string },
+        { results: string[] }
+      >({
+        method: 'QUERY',
+        path: '/search',
+        response: { results: [] },
+      })
+
+      const data = await searchUsers(client, { term: 'nexa' })
+      expect(querySpy).toHaveBeenCalledWith('/search', { term: 'nexa' })
+      expect(data).toEqual({ results: ['a'] })
+    })
+
+    it('should route each endpoint in a schema via createTypedApiClient', async () => {
+      const client = createMockClient({
+        get: vi
+          .fn()
+          .mockResolvedValue(
+            Ok({ status: 200, statusText: 'OK', headers: {}, data: { id: 1 } }),
+          ),
+        delete: vi.fn().mockResolvedValue(
+          Ok({
+            status: 204,
+            statusText: 'No Content',
+            headers: {},
+            data: undefined,
+          }),
+        ),
+      })
+
+      const schema = {
+        getUser: {
+          method: 'GET' as const,
+          path: '/users/1',
+          response: { id: 0 } as { id: number },
+        },
+        deleteUser: {
+          method: 'DELETE' as const,
+          path: '/users/1',
+          response: undefined as unknown,
+        },
+      } satisfies ApiSchema
+
+      const api = createTypedApiClient(schema)
+      const user = await api.request(client, 'getUser')
+      expect(user).toEqual({ id: 1 })
+
+      await expect(api.request(client, 'deleteUser')).resolves.toBeUndefined()
     })
   })
 

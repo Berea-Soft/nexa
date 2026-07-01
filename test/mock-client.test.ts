@@ -101,6 +101,19 @@ describe('Mock Client Utilities', () => {
       }
     })
 
+    it('should mock QUERY requests', async () => {
+      const mockData = { results: [{ id: 1 }] }
+      mockAdapter.onQuery('/search').reply(200, mockData)
+
+      const result = await mockAdapter.client.query('/search', {
+        term: 'nexa',
+      })
+      expect(result.ok).toBe(true)
+      if (result.ok) {
+        expect(result.value.data).toEqual(mockData)
+      }
+    })
+
     it('should handle request with baseURL correctly', async () => {
       const mockData = { id: 1 }
       mockAdapter.onGet('/users').reply(200, mockData)
@@ -152,13 +165,12 @@ describe('Mock Client Utilities', () => {
     it('should support timeout simulation', async () => {
       mockAdapter.onGet('/slow').timeout()
 
-      const result = await mockAdapter.client.get('/slow')
+      // The mock delays far longer than this request timeout, so the client's
+      // own abort/timeout logic fires first — exercising the real TimeoutError path.
+      const result = await mockAdapter.client.get('/slow', { timeout: 20 })
       expect(result.ok).toBe(false)
       if (!result.ok) {
-        // The mock adapter returns a timeout response (status 408) rather than throwing
-        // This depends on implementation
-        expect(result.error.code).toBe('HTTP_ERROR')
-        expect(result.error.status).toBe(408)
+        expect(result.error.code).toBe('TIMEOUT')
       }
     })
 

@@ -6,7 +6,10 @@ import type {
   SSEOptions,
   ISSEClient,
   RealtimeMessageEvent,
+  RealtimeSendError,
+  Result,
 } from '../types/index.js'
+import { Err } from '../types/index.js'
 import { PluginManager } from '../utils/index.js'
 
 /**
@@ -46,6 +49,10 @@ class BrowserSSEClient implements ISSEClient {
     event: new Map<string, Set<(data: unknown) => void>>(),
   }
   private _lastEventId: string | null = null
+  private nativeEventListeners = new Map<
+    string,
+    Map<(data: unknown) => void, (e: MessageEvent) => void>
+  >()
 
   constructor(url: string, options: SSEOptions = {}) {
     this.url = url
@@ -79,6 +86,7 @@ class BrowserSSEClient implements ISSEClient {
         this.updateStatus('closed')
         this._source?.close()
         this._source = null
+        this.nativeEventListeners.clear()
         const error = new Error(`SSE connection timeout after ${timeout}ms`)
         this.emitError(error)
         reject(error)
@@ -145,10 +153,8 @@ class BrowserSSEClient implements ISSEClient {
           }
         }
 
-        // Listen for named events
-        this._source.addEventListener = this._source.addEventListener.bind(
-          this._source,
-        )
+        // Re-attach named-event listeners registered before this (re)connect
+        this.attachAllNamedListeners()
       } catch (error) {
         clearTimeout(timeoutTimer)
         this.updateStatus('closed')
@@ -164,16 +170,19 @@ class BrowserSSEClient implements ISSEClient {
       this.updateStatus('closing')
       this._source.close()
       this._source = null
+      this.nativeEventListeners.clear()
       this.updateStatus('closed')
       this.emitClose()
       this.options.onClose?.()
     }
   }
 
-  send(_data: string | ArrayBuffer | Blob): void {
-    throw new Error(
-      'SSE is a receive-only protocol. Use HTTP requests to send data to server.',
-    )
+  send(_data: string | ArrayBuffer | Blob): Result<void, RealtimeSendError> {
+    return Err({
+      message:
+        'SSE is a receive-only protocol. Use HTTP requests to send data to server.',
+      code: 'UNSUPPORTED',
+    })
   }
 
   onMessage<T = unknown>(
@@ -203,27 +212,58 @@ class BrowserSSEClient implements ISSEClient {
     return () => this.listeners.error.delete(callback)
   }
 
+  private attachNamedListener(
+    event: string,
+    callback: (data: unknown) => void,
+  ): void {
+    if (!this._source) {
+      return
+    }
+    const nativeListener = (e: MessageEvent) => {
+      const messageEvent: RealtimeMessageEvent = {
+        data: this.tryParseData(e.data),
+        raw: e.data,
+        type: event,
+        timestamp: Date.now(),
+      }
+      callback(messageEvent.data)
+    }
+    this._source.addEventListener(event, nativeListener)
+    if (!this.nativeEventListeners.has(event)) {
+      this.nativeEventListeners.set(event, new Map())
+    }
+    this.nativeEventListeners.get(event)!.set(callback, nativeListener)
+  }
+
+  private detachNamedListener(
+    event: string,
+    callback: (data: unknown) => void,
+  ): void {
+    const nativeListener = this.nativeEventListeners.get(event)?.get(callback)
+    if (nativeListener) {
+      this._source?.removeEventListener(event, nativeListener)
+      this.nativeEventListeners.get(event)!.delete(callback)
+      if (this.nativeEventListeners.get(event)!.size === 0) {
+        this.nativeEventListeners.delete(event)
+      }
+    }
+  }
+
+  private attachAllNamedListeners(): void {
+    this.nativeEventListeners.clear()
+    for (const [event, callbacks] of this.listeners.event) {
+      for (const callback of callbacks) {
+        this.attachNamedListener(event, callback)
+      }
+    }
+  }
+
   onEvent<T = unknown>(event: string, callback: (data: T) => void): () => void {
     if (!this.listeners.event.has(event)) {
       this.listeners.event.set(event, new Set())
     }
     this.listeners.event.get(event)!.add(callback as (data: unknown) => void)
-
-    // Also set up EventSource listener if connected
-    if (
-      this._source &&
-      !(this._source as unknown as Record<string, unknown>)[`on${event}`]
-    ) {
-      this._source.addEventListener(event, (e: MessageEvent) => {
-        const messageEvent: RealtimeMessageEvent = {
-          data: this.tryParseData(e.data),
-          raw: e.data,
-          type: event,
-          timestamp: Date.now(),
-        }
-        callback(messageEvent.data as T)
-      })
-    }
+    this.attachNamedListener(event, callback as (data: unknown) => void)
 
     return () => {
       const listeners = this.listeners.event.get(event)
@@ -233,6 +273,7 @@ class BrowserSSEClient implements ISSEClient {
           this.listeners.event.delete(event)
         }
       }
+      this.detachNamedListener(event, callback as (data: unknown) => void)
     }
   }
 
@@ -312,10 +353,10 @@ class BrowserSSEClient implements ISSEClient {
 
     const baseDelay = this.options.reconnect?.baseDelay ?? 1000
     const maxDelay = this.options.reconnect?.maxDelay ?? 30000
-    const delay = Math.min(
-      maxDelay,
-      baseDelay * Math.pow(2, this.reconnectAttempt),
-    )
+    const backoff = baseDelay * Math.pow(2, this.reconnectAttempt)
+    // Jitter avoids a thundering herd when many clients reconnect at once.
+    const jitter = Math.random() * backoff * 0.1
+    const delay = Math.min(maxDelay, backoff + jitter)
 
     this.reconnectAttempt++
     this.stats.reconnectAttempts = this.reconnectAttempt
@@ -352,18 +393,19 @@ class BrowserSSEClient implements ISSEClient {
 }
 
 /**
- * Node.js SSE client implementation using fetch with streaming
- * Note: This is a basic implementation - EventSource is not available in Node.js
+ * Node.js has no native EventSource implementation. This client is not
+ * functional and fails fast at construction time instead of at connect()
+ * time so callers don't build up state (listeners, config) against a
+ * client that can never connect.
  */
 class NodeSSEClient extends BrowserSSEClient {
-  async connect(): Promise<void> {
-    if (isNode()) {
-      throw new Error(
-        'SSE client for Node.js requires a polyfill or custom implementation. ' +
-          'Consider using a library like "eventsource" or implement using fetch with streaming.',
-      )
-    }
-    return super.connect()
+  constructor(url: string, options: SSEOptions = {}) {
+    super(url, options)
+    throw new Error(
+      "Nexa's SSE client is browser-only (it relies on the native EventSource API). " +
+        'Node.js has no built-in EventSource. Use a polyfill (e.g. the "eventsource" package) ' +
+        'and pass it via a custom implementation, or run this client in a browser environment.',
+    )
   }
 }
 

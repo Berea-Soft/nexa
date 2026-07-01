@@ -28,6 +28,8 @@ export type {
   PollOptions,
   Disposer,
   Result,
+  QueryParams,
+  QueryParamValue,
 } from '../types/index.js'
 
 export { Ok, Err } from '../types/index.js'

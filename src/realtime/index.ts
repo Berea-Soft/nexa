@@ -11,6 +11,7 @@ export type {
   IRealtimeClient,
   IWebSocketClient,
   ISSEClient,
+  RealtimeSendError,
 } from '../types/index.js'
 
 export { createWebSocketClient } from './websocket-client.js'

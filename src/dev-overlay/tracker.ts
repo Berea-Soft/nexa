@@ -27,14 +27,18 @@ function savePersistedConfig(cfg: Partial<DevOverlayConfig>): void {
 }
 
 export class RequestTracker {
-  private history: TrackedRequest[] = []
+  /** Fixed-size ring buffer; `buffer[writeIndex]` is the next slot to overwrite. */
+  private buffer: TrackedRequest[] = []
+  private writeIndex = 0
+  private count = 0
   private maxHistory: number
   private listeners: Set<(request: TrackedRequest) => void> = new Set()
   private startTime = Date.now()
   private config: Required<DevOverlayConfig>
 
   constructor(config: DevOverlayConfig = {}) {
-    this.maxHistory = config.maxHistory ?? 500
+    this.maxHistory = Math.max(1, config.maxHistory ?? 500)
+    this.buffer = new Array(this.maxHistory)
     this.config = {
       enabled: config.enabled ?? true,
       maxHistory: this.maxHistory,
@@ -59,10 +63,9 @@ export class RequestTracker {
       timestamp: Date.now(),
     }
 
-    this.history.unshift(tracked)
-    if (this.history.length > this.maxHistory) {
-      this.history.pop()
-    }
+    this.buffer[this.writeIndex] = tracked
+    this.writeIndex = (this.writeIndex + 1) % this.maxHistory
+    this.count = Math.min(this.count + 1, this.maxHistory)
 
     for (const listener of this.listeners) {
       listener(tracked)
@@ -71,33 +74,44 @@ export class RequestTracker {
     return tracked
   }
 
+  /** Returns a fresh array, newest first. O(n) — safe to call on every render. */
   getHistory(): TrackedRequest[] {
-    return this.history
+    const result: TrackedRequest[] = []
+    for (let i = 0; i < this.count; i++) {
+      const index =
+        (((this.writeIndex - 1 - i) % this.maxHistory) + this.maxHistory) %
+        this.maxHistory
+      result.push(this.buffer[index])
+    }
+    return result
   }
 
   getMetrics(): DevMetrics {
-    const durations = this.history.map((r) => r.duration)
+    const history = this.getHistory()
+    const durations = history.map((r) => r.duration)
     const elapsed = (Date.now() - this.startTime) / 1000
 
     return {
-      totalRequests: this.history.length,
-      successfulRequests: this.history.filter((r) => r.ok).length,
-      failedRequests: this.history.filter((r) => !r.ok).length,
-      cachedRequests: this.history.filter((r) => r.cached).length,
+      totalRequests: history.length,
+      successfulRequests: history.filter((r) => r.ok).length,
+      failedRequests: history.filter((r) => !r.ok).length,
+      cachedRequests: history.filter((r) => r.cached).length,
       avgDuration: durations.length
         ? durations.reduce((a, b) => a + b, 0) / durations.length
         : 0,
       maxDuration: durations.length ? Math.max(...durations) : 0,
       minDuration: durations.length ? Math.min(...durations) : 0,
-      requestsPerSecond: elapsed > 0 ? this.history.length / elapsed : 0,
-      slowestRequests: [...this.history]
+      requestsPerSecond: elapsed > 0 ? history.length / elapsed : 0,
+      slowestRequests: history
         .sort((a, b) => b.duration - a.duration)
         .slice(0, 5),
     }
   }
 
   clear(): void {
-    this.history = []
+    this.buffer = new Array(this.maxHistory)
+    this.writeIndex = 0
+    this.count = 0
     this.startTime = Date.now()
   }
 
@@ -115,13 +129,30 @@ export class RequestTracker {
       ...this.config,
       ...partial,
     }
-    // Keep internal maxHistory in sync
-    this.maxHistory = this.config.maxHistory
+    // Keep internal maxHistory (and the ring buffer's capacity) in sync
+    const newMaxHistory = Math.max(1, this.config.maxHistory)
+    if (newMaxHistory !== this.maxHistory) {
+      this.resizeHistory(newMaxHistory)
+    }
     // persist updated config
     try {
       savePersistedConfig(this.config)
     } catch {}
     return this.config
+  }
+
+  /** Rebuilds the ring buffer at a new capacity, keeping the most recent entries. */
+  private resizeHistory(newMaxHistory: number): void {
+    const newestFirst = this.getHistory().slice(0, newMaxHistory)
+    this.maxHistory = newMaxHistory
+    this.buffer = new Array(newMaxHistory)
+    this.writeIndex = 0
+    this.count = 0
+    for (let i = newestFirst.length - 1; i >= 0; i--) {
+      this.buffer[this.writeIndex] = newestFirst[i]
+      this.writeIndex = (this.writeIndex + 1) % this.maxHistory
+      this.count++
+    }
   }
 
   private generateId(): string {

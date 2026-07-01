@@ -8,6 +8,7 @@ import type {
   Transformer,
   RetryStrategy,
   HttpErrorDetails,
+  HttpResponse,
   IHttpClient,
 } from '../types'
 import { Ok, Err } from '../types'
@@ -22,6 +23,12 @@ export function createSchemaValidator<T>(
 ): Validator {
   return {
     validate(data) {
+      if (typeof data !== 'object' || data === null) {
+        return Err({
+          message: 'Validation failed: expected an object',
+          code: 'VALIDATION_ERROR',
+        })
+      }
       const obj = data as Record<string, unknown>
       for (const [key, check] of Object.entries(schema)) {
         const checkFn = check as (value: unknown) => boolean
@@ -43,6 +50,12 @@ export function createSchemaValidator<T>(
 export function createRequiredFieldsValidator(fields: string[]): Validator {
   return {
     validate(data) {
+      if (typeof data !== 'object' || data === null) {
+        return Err({
+          message: 'Validation failed: expected an object',
+          code: 'VALIDATION_ERROR',
+        })
+      }
       const obj = data as Record<string, unknown>
       const missing = fields.filter((field) => !(field in obj))
       if (missing.length > 0) {
@@ -271,7 +284,7 @@ function flatten(data: unknown, prefix = ''): Record<string, unknown> {
       data as Record<string, unknown>,
     )) {
       const flatKey = prefix ? `${prefix}.${key}` : key
-      if (value && typeof value === 'object' && !Array.isArray(value)) {
+      if (value && typeof value === 'object') {
         Object.assign(result, flatten(value, flatKey))
       } else {
         result[flatKey] = value
@@ -672,7 +685,7 @@ export function createTypedResponse<T, U = unknown>(
  * API Endpoint definition with typed request/response
  */
 export interface ApiEndpoint<TRequest = unknown, TResponse = unknown> {
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'QUERY'
   path: string
   request?: TRequest
   response: TResponse
@@ -686,29 +699,35 @@ export function createTypedRequest<TRequest, TResponse>(
 ): (client: IHttpClient, req?: TRequest) => Promise<TResponse> {
   return async (client, req?) => {
     const url = endpoint.path
-    let response: unknown
+    let result: Awaited<ReturnType<IHttpClient['get']>>
 
     switch (endpoint.method) {
       case 'GET':
-        response = await client.get(url)
+        result = await client.get<TResponse>(url)
         break
       case 'POST':
-        response = await client.post(url, req)
+        result = await client.post<TResponse>(url, req)
         break
       case 'PUT':
-        response = await client.put(url, req)
+        result = await client.put<TResponse>(url, req)
         break
       case 'PATCH':
-        response = await client.patch(url, req)
+        result = await client.patch<TResponse>(url, req)
         break
       case 'DELETE':
-        response = await client.delete(url)
+        result = await client.delete<TResponse>(url)
+        break
+      case 'QUERY':
+        result = await client.query<TResponse>(url, req)
         break
       default:
         throw new Error(`Unsupported method: ${endpoint.method}`)
     }
 
-    return response as TResponse
+    if (!result.ok) {
+      throw new Error(result.error.message)
+    }
+    return (result.value as HttpResponse<TResponse>).data
   }
 }
 
