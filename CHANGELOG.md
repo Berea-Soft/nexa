@@ -1,3 +1,15 @@
+# [1.8.0](https://github.com/Berea-Soft/nexa/compare/v1.7.0...v1.8.0) (2026-07-01)
+
+
+### Bug Fixes
+
+* **ci:** update Node.js version to 24 and adjust coverage upload condition ([a79ce4a](https://github.com/Berea-Soft/nexa/commit/a79ce4aff02ba883bc0ac5e392023f2f71800974))
+
+
+### Features
+
+* **tests:** enhance RequestTracker tests for eviction, history management, and security ([fbd6f18](https://github.com/Berea-Soft/nexa/commit/fbd6f1812cc5bffcdacbbaa2deb4b1ca1d5db522))
+
 # [1.7.0](https://github.com/Berea-Soft/nexa/compare/v1.6.0...v1.7.0) (2026-05-19)
 
 
