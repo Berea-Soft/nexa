@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/Berea-Soft/nexa/compare/v1.6.0...v1.7.0) (2026-05-19)
+
+
+### Features
+
+* **dev-overlay:** add header actions visibility update based on request history ([7319b32](https://github.com/Berea-Soft/nexa/commit/7319b323e553d0578f10091482e45b9b697cb350))
+
 # [1.6.0](https://github.com/Berea-Soft/nexa/compare/v1.5.0...v1.6.0) (2026-05-19)
 
 
