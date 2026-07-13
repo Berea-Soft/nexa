@@ -249,11 +249,6 @@ describe('Nexa HTTP Client - Vitest Integration Examples', () => {
         return { status: 200, data: { count: apiCallCount } }
       })
 
-      // Create client with cache middleware
-      const cachingClient = createHttpClient({
-        baseURL: 'https://api.example.com',
-      })
-
       // In a real scenario, you'd set up cache middleware
       // For this example, we'll just verify the mock behavior
 
