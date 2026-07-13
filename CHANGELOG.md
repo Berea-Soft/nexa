@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/Berea-Soft/nexa/compare/v1.8.0...v1.8.1) (2026-07-13)
+
+
+### Bug Fixes
+
+* **tests:** simplify HttpError import in response parsing edge cases ([87bbde1](https://github.com/Berea-Soft/nexa/commit/87bbde1a194f3f6750c8b902d8ce409660903e95))
+
 # [1.8.0](https://github.com/Berea-Soft/nexa/compare/v1.7.0...v1.8.0) (2026-07-01)
 
 
