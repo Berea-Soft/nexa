@@ -1667,7 +1667,7 @@ describe('HTTP Client Plugin', () => {
   describe('Response parsing edge cases', () => {
     it('should import and use HttpError from library', async () => {
       // Given: HttpError import
-      const { HttpError, isHttpError, createHttpClient } =
+      const { HttpError } =
         await import('../src/http-client')
 
       // When: creating an HttpError instance
